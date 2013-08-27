@@ -42,7 +42,7 @@ module Wired
 
 
 		def disconnect
-			@socket.close
+			@socket.diconnect
 		end
 
 
