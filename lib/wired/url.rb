@@ -50,6 +50,8 @@ module Wired
 		def initialize(base)
 			@base 	= base
 
+			@scheme = "wired" # default scheme
+
 			if base != nil
 				decompose(base)
 			end
