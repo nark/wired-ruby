@@ -137,8 +137,8 @@ module Wired
 
 		def login
 			message = Wired::Message.new("wired.send_login", @spec)
-			message.set_value_for_name("guest", "wired.user.login")
-			message.set_value_for_name(Digest::SHA1.hexdigest(""), "wired.user.password")
+			message.set_value_for_name(@url[:login], "wired.user.login")
+			message.set_value_for_name(Digest::SHA1.hexdigest(@url[:password]), "wired.user.password")
 
 			send_message message
 			message = @socket.read
