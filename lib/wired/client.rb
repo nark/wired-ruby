@@ -41,6 +41,12 @@ module Wired
 
 
 
+		def disconnect
+			@socket.close
+		end
+
+
+
 		# def join_public_chat
 		# 	message = Wired::Message.new("wired.chat.join_chat", @spec)
 		# 	message.set_value_for_name(1, "wired.chat.id")
