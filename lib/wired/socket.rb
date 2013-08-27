@@ -19,8 +19,10 @@ module Wired
 		attr_accessor :hostname
 		attr_accessor :port
 		attr_accessor :spec
+		attr_accessor :errors
 
 		def initialize(hostname, port, spec)
+			@errors		= Array.new
 			@hostname 	= hostname
      	 	@port 		= port
      	 	@spec		= spec
@@ -54,6 +56,7 @@ module Wired
 					return message
 				else
 					puts "Received Wired error: " + message.to_s
+					@errors.push message
 				end
 			end
 
