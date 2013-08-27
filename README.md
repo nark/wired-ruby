@@ -1,0 +1,3 @@
+# wired-ruby
+
+Wired-Ruby is a light programming library that implements the Wired 2.0 protocol in Ruby language. Currently a work in progress...

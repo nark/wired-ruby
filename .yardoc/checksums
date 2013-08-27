@@ -1,0 +1,6 @@
+lib/wired.rb c9012f3d63aeb43138dfafadd2d45e31b425b2a5
+lib/wired/url.rb cb2a5d7a5b591b501dab2175043a84b5afc90091
+lib/wired/spec.rb 2d4d894cd9242049a56b73d75c2f75113d8a5aac
+lib/wired/socket.rb d309897443c040faee0766ec31ced53bc84d85c6
+lib/wired/client.rb 23991d13830cfef795831b9e9759fb6c846ef089
+lib/wired/message.rb de6e1ab4109da57b5fc0e786b179341cba6eac0b

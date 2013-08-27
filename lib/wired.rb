@@ -1,0 +1,5 @@
+require_relative 'wired/client'
+require_relative 'wired/message'
+require_relative 'wired/socket'
+require_relative 'wired/spec'
+require_relative 'wired/url'
