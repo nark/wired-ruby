@@ -52,11 +52,11 @@ module Wired
 
 			if message.length > 0
 				message = Wired::Message.new(message, @spec)
-				if message.name != "wired.error"
-					return message
+				
+				if message.name == "wired.error"
+					handle_error message
 				else
-					puts "Received Wired error: " + message.to_s
-					@errors.push message
+					return message
 				end
 			end
 
@@ -79,6 +79,12 @@ module Wired
 	      readfds, writefds, exceptfds = select([@socket], nil, nil, 0.1)
 	      p :r => readfds, :w => writefds, :e => exceptfds
 	      readfds #Will be nil if next line cannot be read
+	    end
+
+
+	    def handle_error(message)
+	    	puts "Received Wired error: " + message.to_s
+			@errors.push message
 	    end
 	end
 end
