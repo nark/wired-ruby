@@ -106,7 +106,7 @@ module Wired
 					end
 				end
 			elsif(@serialization == Wired::Socket::Serialization::BINARY)
-				#puts @socket.read 
+				puts @socket.read 
 			end
 
 			if message.length > 0
