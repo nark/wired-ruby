@@ -7,13 +7,15 @@ Wired-Ruby is a light programming library that implements the Wired 2.0 protocol
 ## Dependencies
 
 * nokogiri
-* xml-simple
 * rspec
 * timers
 * logging
 * deep_clone
 * openssl
 * zlib
+
+See `wired.gemspec` files for more details.
+
 
 
 ## Install

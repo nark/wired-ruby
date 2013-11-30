@@ -13,7 +13,6 @@ Gem::Specification.new do |s|
   s.required_ruby_version = '>= 1.9.2'
 
   s.add_development_dependency('nokogiri', '~> 1.5.5')
-  s.add_development_dependency('xml-simple', '~> 1.1.2')
   s.add_development_dependency('rspec', '~> 2.13.0')
   s.add_development_dependency('timers', '~> 1.1.0')
   s.add_development_dependency("logging", "~> 1.8.1")
