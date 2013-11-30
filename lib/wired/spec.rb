@@ -1,17 +1,106 @@
 module Wired
+	class SpecItem
+		attr_accessor	:name
+		attr_accessor	:id
+		attr_accessor	:version
+		attr_accessor	:document
+
+		def initialize(name, options = {})
+			@name 		= name
+			@id	 		= options[:id]
+			@version	= options[:version]
+			@document	= options[:document]
+		end
+	end
+
+
+
+
+	class SpecType < SpecItem
+		attr_accessor	:size
+
+		def initialize(name, options = {})
+			@size 	= options[:size]
+			super
+		end
+	end
+
+
+
+
+	class SpecField < SpecItem
+		attr_accessor	:type
+		attr_accessor	:required
+
+		def initialize(name, options = {})
+			@type 		= options[:type]
+			@required 	= options[:required]
+			super
+		end
+	end
+
+
+
+
+	class SpecCollection < SpecItem
+		attr_accessor	:fields
+
+		def initialize(name, options = {})
+			@fields 	= options[:fields]
+			super
+		end
+	end
+
+
+
+
+	class SpecMessage < SpecCollection
+		def initialize(name, options = {})
+			@fields	   = options[:fields]
+			super
+		end
+
+	end
+
+
+
+
+	class SpecTransaction < SpecItem
+		
+	end
+
+
+
+
 	class Spec
 		require 'nokogiri'
+		require 'deep_clone'
 
 		attr_accessor	:path
 		attr_accessor 	:doc
 		attr_accessor 	:builtindoc
 
+		attr_accessor	:types
+		attr_accessor	:fields_by_id
+		attr_accessor	:fields_by_name
+		attr_accessor	:collections
+		attr_accessor	:messages_by_id
+		attr_accessor	:messages_by_name
+		attr_accessor	:transactions
+
 	public
 		def initialize(path)
+			@types 				= Hash.new
+			@fields_by_id 		= Hash.new
+			@fields_by_name		= Hash.new
+			@collections 		= Hash.new
+			@messages_by_id 	= Hash.new
+			@messages_by_name 	= Hash.new
+			@transactions 		= Hash.new
+
 			@path 				= path
 			@doc 				= nil
-			
-			xml = 
+			xml 				= 
 '<?xml version="1.0" encoding="UTF-8"?>
 <p7:protocol xmlns:p7="http://www.zankasoftware.com/P7/Specification"
 			 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -143,8 +232,11 @@ module Wired
 
 			
 			@builtindoc = Nokogiri::XML(xml)
-
 			@builtindoc.remove_namespaces!
+
+			load_types 			@builtindoc
+			load_fields 		@builtindoc
+			load_messages 		@builtindoc
 
 			if @path
 				load(@path)
@@ -152,13 +244,35 @@ module Wired
 		end
 
 
-		# create a Wired::Message object template against the specification for a given name
-		def message_with_name(name)
-			spec 	= spec_for_message_name(name)
-			fields 	= Array.new
-			query 	= "//protocol/messages/message[@name='" + name + "']/parameter"
+
+		def spec_message_with_name(name)
+			return @messages_by_name[name]
+		end
+
+		def spec_message_with_id(id)
+			return @messages_by_id[id]
+		end
+
+		def spec_collection_with_name(name)
+			return @collections[name]
+		end
+
+		def spec_field_with_name(name)
+			return @fields_by_name[name]
+		end
+
+		def spec_field_with_id(id)
+			return @fields_by_id[id]
+		end
+
+
+		# create a XML message template against the specification for a given name
+		def xml_message_with_name(name)
+			spec_message 	= @messages_by_name[name]
+			query 			= "//protocol/messages/message[@name='" + name + "']/parameter"
+
 			builder = Nokogiri::XML::Builder.new(:encoding => 'UTF-8') do |xml|
-				parameters = spec.xpath(query).map 
+				parameters = spec_message.document.xpath(query).map 
 
 				if parameters
 					xml.message("name" => name, "xmlns:p7" => "http://www.zankasoftware.com/P7/Message") {
@@ -170,9 +284,44 @@ module Wired
 									xml.text ""
 								}
 							elsif(type == "collection")
-								sub_fields = collection_with_name(value)
-								sub_fields.each do |sub_param|
-									xml["p7"].field("name" => sub_param.attribute_nodes.first.value){ 
+								collection = @collections[value]
+								collection.fields.each do |field_name|
+									xml["p7"].field("name" => field_name){ 
+										xml.text ""
+									}
+								end
+							end
+						end
+					}
+				end
+			end
+
+			builder.doc.root.name = "p7:message"
+			return builder.to_xml
+		end
+
+
+		# create a XML message template against the specification for a given id
+		def xml_message_with_id(id)
+			spec_message 	= @messages_by_id[id]
+			query 			= "//protocol/messages/message[@name='" + name + "']/parameter"
+
+			builder = Nokogiri::XML::Builder.new(:encoding => 'UTF-8') do |xml|
+				parameters = spec_message.document.xpath(query).map 
+
+				if parameters
+					xml.message("name" => spec_message.name, "xmlns:p7" => "http://www.zankasoftware.com/P7/Message") {
+						parameters.each do |parameter|	
+							type  = parameter.attribute_nodes.first.name
+							value = parameter.attribute_nodes.first.value
+							if(type == "field")
+								xml["p7"].field("name" => value){ 
+									xml.text ""
+								}
+							elsif(type == "collection")
+								collection = @collections[value]
+								collection.fields.each do |field_name|
+									xml["p7"].field("name" => field_name){ 
 										xml.text ""
 									}
 								end
@@ -195,6 +344,7 @@ module Wired
 
 
 
+
 	private
 		# loads a specification at path
 		def load(path)
@@ -204,10 +354,126 @@ module Wired
 		      puts "ERROR: Can't open the specification file: " + path
 		      return
 		    end
+
+		    # load the XML document
 		    @doc = Nokogiri::XML(file)
-		    @doc.remove_namespaces!
+		    @doc.remove_namespaces! 
+		    # NOTE: namespaces are ignored
+
+		    # load spec items
+			load_fields 		@doc
+			load_collections 	@doc
+			load_messages 		@doc
 		end
 
+
+
+		def load_types(doc)
+			query = "//protocol/types/*"
+
+			doc.xpath(query).each do |node|
+				id 		= node["id"]
+				type 	= SpecType.new( node["name"], :id => id, :size => node["size"], :document => doc )
+
+				@types[id] = type unless @types.key?(id)
+			end
+		end
+
+
+
+		def load_fields(doc)
+			query = "//protocol/fields/*"
+
+			doc.xpath(query).each do |node|
+				id 		= node["id"]
+				name 	= node["name"]
+
+				field 	= SpecField.new( name, :id => id, :type => node["type"], :version => node["version"], :document => doc )
+
+				@fields_by_id[id] 		= field #unless @fields_by_id.key?(id)
+				@fields_by_name[name] 	= field #unless @fields_by_name.key?(name)
+			end
+		end
+
+
+
+		def load_collections(doc)
+			fields 	= Array.new
+			query 	= "//protocol/collections/*"
+
+			doc.xpath(query).each do |node|
+				name = node["name"]
+
+				if ! @collections.key?(name)
+					collection 	= SpecCollection.new( name, :document => doc )
+
+					node.children.each do |member|
+						field_name = member["field"]
+						fields.push field_name unless field_name == nil
+					end
+
+					collection.fields 	= fields
+					@collections[name] 	= collection
+				end
+			end
+		end
+
+
+
+		def load_messages(doc)
+			fields 	= Array.new
+			query 	= "//protocol/messages/*"
+
+			doc.xpath(query).each do |node|
+				id 		= node["id"]
+				name 	= node["name"]
+
+				if ! @messages_by_id.key?(id)
+					message = SpecMessage.new( name, :id => id, :version => node["version"], :document => doc )
+
+					# search for messages fields and collections
+					node.children.each do |subnode|
+						break unless subnode != nil
+
+						if(subnode["field"] != nil)
+							subname = subnode["field"]
+
+							if (subname != nil)
+								field = @fields_by_name[subname]
+								field = DeepClone.clone(field)
+
+								field.required = (subnode["use"] == "required")
+
+								fields.push field
+							end
+						elsif (subnode["collection"] != nil)
+							subname 		= subnode["collection"]
+							collection 	= @collections[subname]
+
+							collection.fields.each do |field_name|
+								field = @fields_by_name[field_name]
+								field = DeepClone.clone(field)
+
+								field.required = (subnode["use"] == "required")
+
+								fields.push field
+							end
+						end
+					end
+
+					message.fields 			= fields
+
+					@messages_by_id[id] 	= message
+					@messages_by_name[name] = message
+				end
+			end
+		end
+
+
+
+		def load_transactions(doc)
+
+		end
 
 
 		# returns an array of fields for a collection with a given name

@@ -6,9 +6,9 @@ Gem::Specification.new do |s|
   s.description = "This wired gem provides a Wired 2.0 implementation in Ruby"
   s.authors     = ["Rafaël Warnault"]
   s.email       = 'dev@read-write.fr'
-  s.files 		= Dir["{lib}/**/*", "[A-Z]*"]
+  s.files 		  = Dir["{lib}/**/*", "[A-Z]*"]
   s.homepage    = 'http://wired.read-write.fr'
-  s.license 	= 'BSD'
+  s.license 	  = 'BSD'
 
   s.required_ruby_version = '>= 1.9.2'
 
@@ -16,4 +16,8 @@ Gem::Specification.new do |s|
   s.add_development_dependency('xml-simple', '~> 1.1.2')
   s.add_development_dependency('rspec', '~> 2.13.0')
   s.add_development_dependency('timers', '~> 1.1.0')
+  s.add_development_dependency("logging", "~> 1.8.1")
+  s.add_development_dependency('deep_clone')
+  s.add_development_dependency('openssl')
+  s.add_development_dependency('zlib')
 end

@@ -31,7 +31,7 @@ module Wired
 		context "::message" do
 			it "should create a default Wired message as XML snippet for a given name" do
 				spec    = Wired::Spec.new(@spec_path)
-				xml 	= spec.message_with_name(@message_name)
+				xml 	= spec.xml_message_with_name(@message_name)
 
 				spec.should_not				be_nil	
 				xml.should_not				be_nil
@@ -41,7 +41,7 @@ module Wired
 
 			it "should create a default Wired message as XML snippet for a given name using builtin spec" do
 				spec    = Wired::Spec.new(@spec_path)
-				xml 	= spec.message_with_name("p7.handshake.client_handshake")
+				xml 	= spec.xml_message_with_name("p7.handshake.client_handshake")
 
 				spec.should_not				be_nil	
 				xml.should_not				be_nil

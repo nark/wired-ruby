@@ -6,6 +6,7 @@ module Wired
 		attr_accessor	:url
 		attr_accessor	:nick
 		attr_accessor	:status
+		attr_accessor	:options
 		attr_accessor	:icon
 		attr_accessor	:socket
 
@@ -14,22 +15,31 @@ module Wired
 
 
 
-		def initialize(spec, nick=nil, status=nil)
+		def initialize(spec, options = {})
 			@spec		= spec
-			@nick 		= nick  	|| "Ruby Wired Client"
-			@status		= status  	|| "Ruby version " + RUBY_VERSION
+			@nick 		= options[:nick]  	|| "Ruby Wired Client"
+			@status		= options[:status]  || "Ruby version " + RUBY_VERSION
+			@options 	= options
 		end
 
 
 
 		def connect(url)
 			@url 		= url
-			@socket 	= Wired::Socket.new(@url.hostname, @url.port, @spec)
 
-			if @socket.connect && handshake
+			options 	= {
+				:port 		 	=> @url.port,
+				:timeout 		=> @options[:timeout],
+				:serialization 	=> Wired::Socket::Serialization::BINARY,
+				:cipher 		=> Wired::Socket::Cipher::NONE,
+				:compression 	=> false
+			}
+
+			@socket = Wired::Socket.new(@url.hostname, @spec, options)
+
+			if @socket.connect
 				client_info
 				if login
-					#receive_loop
 					ping_loop
 
 					return true
@@ -59,9 +69,9 @@ module Wired
 
 
 		def send_message(message, &block)
-			@socket.write(message.to_s)
+			@socket.write message
 
-			puts "Sent Message: " + message.name
+			Wired::LOGGER.debug "Sent Message: " + message.to_xml
 
 			if(block)
 				response = @socket.read
@@ -75,10 +85,10 @@ module Wired
 
 
 		def receive_message(message)
-			puts "Received Message: " + message.name
+			Wired::LOGGER.debug "Received Message: " + message.to_xml
 
 			if message.name == "wired.send_ping"
-				send_message Wired::Message.new("wired.send_ping", self.spec)
+				send_message Wired::Message.new(:spec => @spec, :name => "wired.send_ping")
 			end
 
 			message = @socket.read
@@ -95,39 +105,19 @@ module Wired
 
 
 	private
-		def handshake
-			message = Wired::Message.new("p7.handshake.client_handshake", @spec)
-			message.set_value_for_name("1.0", "p7.handshake.version")
-			message.set_value_for_name("Wired", "p7.handshake.protocol.name")
-			message.set_value_for_name("2.0b55", "p7.handshake.protocol.version")
-
-			send_message message
-			message = @socket.read
-
-			if !message
-				return false
-			end
-
-			if (message.name != "p7.handshake.server_handshake")
-				puts "ERROR: Unexpected message " + message.name + " from server";
-				return false
-			end
-
-			send_message Wired::Message.new("p7.handshake.acknowledge", @spec)
-
-			return true
-		end
-
-
 
 		def client_info
-			message = Wired::Message.new("wired.client_info", @spec)
-			message.set_value_for_name("Wired Ruby", "wired.info.application.name")
-			message.set_value_for_name("0.1", "wired.info.application.version")
-			message.set_value_for_name("0", "wired.info.application.build")
-			message.set_value_for_name("OSX", "wired.info.os.name")
-			message.set_value_for_name("10.8", "wired.info.os.version")
-			message.set_value_for_name("x86_64", "wired.info.arch")
+			message = Wired::Message.new(:spec => @spec, :name => "wired.client_info")
+
+			message.add_parameters({
+					"wired.info.application.name" 		=> "Wired Ruby",
+					"wired.info.application.version" 	=> "0.1",
+					"wired.info.application.build" 		=> "0",
+					"wired.info.os.name" 				=> "OSX",
+					"wired.info.os.version" 			=> "10.8",
+					"wired.info.arch" 					=> "x86_64",
+					"wired.info.supports_rsrc" 			=> "false"
+				})
 
 			send_message message
 			message = @socket.read
@@ -136,18 +126,18 @@ module Wired
 
 
 		def login
-			message = Wired::Message.new("wired.send_login", @spec)
+			message = Wired::Message.new(:spec => @spec, :name => "wired.send_login")
 
 			if @url.login && @url.login.size > 0
-				message.set_value_for_name(@url.login, "wired.user.login")
+				message.add_parameter("wired.user.login", @url.login)
 			else
-				message.set_value_for_name("guest", "wired.user.login")
+				message.add_parameter("wired.user.login", "guest")
 			end
 			
 			if @url.password && @url.password.size > 0
-				message.set_value_for_name(Digest::SHA1.hexdigest(@url.password), "wired.user.password")
+				message.add_parameter("wired.user.password", Digest::SHA1.hexdigest(@url.password))
 			else
-				message.set_value_for_name(Digest::SHA1.hexdigest(""), "wired.user.password")
+				message.add_parameter("wired.user.password", Digest::SHA1.hexdigest(""))
 			end
 
 			send_message message
@@ -169,7 +159,7 @@ module Wired
 		def ping_loop
 			@ping_thread = Thread.new(self) {
 				while (message = self.socket.read)
-					self.send_message Wired::Message.new("wired.send_ping", self.spec)
+					self.send_message Wired::Message.new(:spec => @spec, :name => "wired.send_ping")
 					sleep 30 
 				end
 			}

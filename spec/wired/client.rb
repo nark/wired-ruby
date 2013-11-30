@@ -12,7 +12,7 @@ module Wired
 			it "should create a new custom Wired Client object" do
 				nick 			= "Nark"
 				status 			= "Testing"
-				client			= Wired::Client.new(@spec, nick, status)
+				client			= Wired::Client.new(@spec, :nick => nick, :status => status)
 
 				client.nick.should		eql nick
 				client.status.should	eql status

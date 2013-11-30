@@ -81,7 +81,7 @@ module Wired
 		# @param url_string [String] a string URL
 		def decompose(url_string)
 			uri 		= URI(url_string)
-			@hostname 	= uri.host
+			@hostname 	= uri.host 		|| '127.0.0.1'
 			@login 		= uri.user 		|| 'guest'
 			@password 	= uri.password 
 			@scheme 	= uri.scheme	|| 'wired'

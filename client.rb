@@ -6,9 +6,9 @@ client 	= Wired::Client.new spec
 
 client.connect url
 
-message = Wired::Message.new("wired.chat.join_chat", spec)
-message.set_value_for_name(1, "wired.chat.id")
+message = Wired::Message.new(:name => "wired.chat.join_chat", :spec => spec)
+message.add_parameter("wired.chat.id", 1)
 
 client.send_message(message) {|response|
-	#puts response.to_s
+	puts response.to_s
 }	
