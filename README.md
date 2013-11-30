@@ -4,6 +4,18 @@
 
 Wired-Ruby is a light programming library that implements the Wired 2.0 protocol in Ruby language. This source code is a working base mainly used to understand better the Wired 2.0 protocol specifications. The library is not finished and does not support the binary serialization yet. Work in progress...
 
+## Dependencies
+
+* nokogiri
+* xml-simple
+* rspec
+* timers
+* logging
+* deep_clone
+* openssl
+* zlib
+
+
 ## Install
 
 1. Get sources:

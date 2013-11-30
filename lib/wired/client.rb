@@ -30,7 +30,7 @@ module Wired
 			options 	= {
 				:port 		 	=> @url.port,
 				:timeout 		=> @options[:timeout],
-				:serialization 	=> Wired::Socket::Serialization::BINARY,
+				:serialization 	=> Wired::Socket::Serialization::XML,
 				:cipher 		=> Wired::Socket::Cipher::NONE,
 				:compression 	=> false
 			}
