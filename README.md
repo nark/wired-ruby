@@ -14,7 +14,7 @@ Wired-Ruby is a light programming library that implements the Wired 2.0 protocol
 * openssl
 * zlib
 
-See `wired.gemspec` files for more details.
+See `wired.gemspec` file for more details.
 
 
 
