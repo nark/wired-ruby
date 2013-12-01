@@ -30,7 +30,7 @@ module Wired
 			options 	= {
 				:port 		 	=> @url.port,
 				:timeout 		=> @options[:timeout],
-				:serialization 	=> Wired::Socket::Serialization::XML,
+				:serialization 	=> Wired::Socket::Serialization::BINARY,
 				:cipher 		=> Wired::Socket::Cipher::NONE,
 				:compression 	=> false
 			}
@@ -71,7 +71,7 @@ module Wired
 		def send_message(message, &block)
 			@socket.write message
 
-			Wired::LOGGER.debug "Sent Message: " + message.to_xml
+			#Wired::LOGGER.debug "Sent Message: " + message.to_xml
 
 			if(block)
 				response = @socket.read
@@ -85,7 +85,7 @@ module Wired
 
 
 		def receive_message(message)
-			Wired::LOGGER.debug "Received Message: " + message.to_xml
+			#Wired::LOGGER.debug "Received Message: " + message.to_xml
 
 			if message.name == "wired.send_ping"
 				send_message Wired::Message.new(:spec => @spec, :name => "wired.send_ping")

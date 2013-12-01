@@ -1,12 +1,14 @@
 module Wired
 	class Message
-		attr_accessor :id
-		attr_accessor :name
-		attr_accessor :parameters
+		attr_accessor 	:id
+		attr_accessor 	:name
+		attr_accessor 	:parameters
 
-		attr_accessor :spec
-		attr_accessor :spec_message
-		attr_accessor :xml
+		attr_accessor 	:spec
+		attr_accessor 	:spec_message
+		attr_accessor 	:xml
+
+		attr_accessor 	:binary
 
 		def initialize(args = {}) 
 			Wired::LOGGER.error self.class.to_s + ":initilize :spec is required" and return if !args.key?(:spec)
@@ -16,6 +18,7 @@ module Wired
 			@spec 			= args[:spec]
 			@spec_message 	= args[:spec_message]
 			@xml 			= args[:xml] 
+			@binary 		= args[:binary] 
 			@parameters 	= Hash.new
 
 			load_message
@@ -70,10 +73,12 @@ module Wired
 			@parameters.each do |name, value|
 				spec_field = @spec.spec_field_with_name(name)
 
-				binary += [spec_field.id.to_i].pack("N*")
-				binary += [value.bytes.length].pack("N*")
-				binary += [value.to_s.encode('utf-8')].pack("Z*")
+				binary << [spec_field.id.to_i].pack("N")
+				binary << [value.to_s.length + 1].pack("N")
+				binary << [value.to_s].pack("Z*")
 			end
+
+			@binary = binary
 
 			return binary
 		end
@@ -82,16 +87,19 @@ module Wired
 	private
 
 		def load_message
-			if !@spec_message && @id
+			if !@spec_message && @xml
+				load_message_for_xml(@xml)
+
+			elsif !@spec_message && @binary
+				load_message_for_binary(@binary)
+
+			elsif !@spec_message && @id
 				@spec_message 	= @spec.spec_message_with_id(@id)
 				@name 			= @spec_message.name
 
 			elsif !@spec_message && @name
 				@spec_message 	= @spec.spec_message_with_name(@name)
 				@id 			= @spec_message.id
-
-			elsif !@spec_message && @xml
-				load_message_for_xml(@xml)
 			end
 		end
 
@@ -112,6 +120,21 @@ module Wired
 
 				@parameters[name] = value
 			end
+		end
+
+
+		def load_message_for_binary(binary)	
+			length, message_id = binary.unpack('N1N1H*')
+
+			return if !length
+			return if !message_id
+
+			puts "length : " + length.to_s
+			puts "message_id : " + message_id.to_s
+
+			@id 			= message_id
+			@spec_message 	= @spec.spec_message_with_id(@id)
+
 		end
 	end
 end

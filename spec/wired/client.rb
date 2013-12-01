@@ -27,7 +27,6 @@ module Wired
 				client.connect(@url)
 				#client.join_public_chat
 			end
-
 		end
 	end
 end

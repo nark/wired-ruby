@@ -166,7 +166,7 @@ module Wired
 
 		<p7:message name="p7.handshake.server_handshake" id="2">
 			<p7:parameter field="p7.handshake.version" use="required" />
-		<p7:parameter field="p7.handshake.protocol.name" use="required" />
+			<p7:parameter field="p7.handshake.protocol.name" use="required" />
 			<p7:parameter field="p7.handshake.protocol.version" use="required" />
 			<p7:parameter field="p7.handshake.encryption" />
 			<p7:parameter field="p7.handshake.compression" />
