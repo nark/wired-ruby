@@ -15,6 +15,7 @@ module Wired
 
 
 
+
 		def initialize(spec, options = {})
 			@spec		= spec
 			@nick 		= options[:nick]  	|| "Ruby Wired Client"
@@ -24,15 +25,15 @@ module Wired
 
 
 
+
 		def connect(url)
 			@url 		= url
-
 			options 	= {
 				:port 		 	=> @url.port,
 				:timeout 		=> @options[:timeout],
 				:serialization 	=> Wired::Socket::Serialization::BINARY,
 				:cipher 		=> Wired::Socket::Cipher::NONE,
-				:compression 	=> false
+				:compression 	=> Wired::Socket::Compression::NONE
 			}
 
 			@socket = Wired::Socket.new(@url.hostname, @spec, options)
@@ -51,20 +52,11 @@ module Wired
 
 
 
+
 		def disconnect
 			@socket.diconnect
 		end
 
-
-
-		# def join_public_chat
-		# 	message = Wired::Message.new("wired.chat.join_chat", @spec)
-		# 	message.set_value_for_name(1, "wired.chat.id")
-
-		# 	send_message(message) {
-		# 		rmessage = @socket.read
-		# 	}
-		# end
 
 
 
@@ -125,6 +117,7 @@ module Wired
 
 
 
+
 		def login
 			message = Wired::Message.new(:spec => @spec, :name => "wired.send_login")
 
@@ -145,6 +138,8 @@ module Wired
 		end
 
 
+
+
 		def receive_loop
 			@receive_thread = Thread.new(self) {
 				while (message = self.socket.read)
@@ -154,6 +149,8 @@ module Wired
 				end
 			}
 		end
+
+
 
 
 		def ping_loop

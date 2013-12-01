@@ -1,94 +1,171 @@
+# == spec.rb
+# This file contains the Wired::Spec class definition. This class
+# is a wrapper for the Wired 2.0 specification. The specification
+# is based on a XML file named "wired.xml" that defines types, fields,
+# messages, transactions and many other data-structures that are 
+# used by the Wired protocol. 
+#
+# The Spec class also takes care of the built-in XSD specification
+# internally used by the protocol to establish communication.
+#
+# == Example
+#
+#	spec	= Wired::Spec.new("wired.xml")
+#
+# == Contact
+#
+# Author::  Rafaël Warnault (mailto:dev@read-write.fr)
+# Website:: http://wired.read-write.fr
+# Date::    Saturday Nov 30, 2013
+#
 module Wired
-	class SpecItem
-		attr_accessor	:name
-		attr_accessor	:id
-		attr_accessor	:version
-		attr_accessor	:document
 
-		def initialize(name, options = {})
-			@name 		= name
-			@id	 		= options[:id]
-			@version	= options[:version]
-			@document	= options[:document]
-		end
-	end
-
-
-
-
-	class SpecType < SpecItem
-		attr_accessor	:size
-
-		def initialize(name, options = {})
-			@size 	= options[:size]
-			super
-		end
-	end
-
-
-
-
-	class SpecField < SpecItem
-		attr_accessor	:type
-		attr_accessor	:required
-
-		def initialize(name, options = {})
-			@type 		= options[:type]
-			@required 	= options[:required]
-			super
-		end
-	end
-
-
-
-
-	class SpecCollection < SpecItem
-		attr_accessor	:fields
-
-		def initialize(name, options = {})
-			@fields 	= options[:fields]
-			super
-		end
-	end
-
-
-
-
-	class SpecMessage < SpecCollection
-		def initialize(name, options = {})
-			@fields	   = options[:fields]
-			super
-		end
-
-	end
-
-
-
-
-	class SpecTransaction < SpecItem
-		
-	end
-
-
-
-
+	# This class is a wrapper for the Wired 2.0 specification. 
+	# The specification is based on a XML file named "wired.xml" 
+	# that defines types, fields, messages, transactions and many 
+	# other data-structures that are used by the Wired protocol. 
+	# The Wired::Spec class is mainly used to construct, handle
+	# and verify messages against the specification. It defines
+	# a set of classes and methods that abstract and optimize
+	# operations around the XML specification.
 	class Spec
 		require 'nokogiri'
 		require 'deep_clone'
 
+
+		# [Wired::Spec::SpecItem] is a base class that wrap any data structure
+		# of the Wired specification. They are built during 
+		# initialization against XML elements of the specification.
+		class SpecItem
+			# The name attribute of the XML element
+			attr_accessor	:name
+
+			# The id attribute of the XML element
+			attr_accessor	:id
+
+			# The version attribute of the XML element
+			attr_accessor	:version
+
+			# The [Nokogiri::XML] document where it comes from
+			attr_accessor	:document
+
+			def initialize(name, options = {})
+				@name 		= name
+				@id	 		= options[:id]
+				@version	= options[:version]
+				@document	= options[:document]
+			end
+		end
+
+
+
+		# [Wired::Spec::SpecType] class represents a data type into 
+		# the Wired specification: <p7:type />
+		#
+		# Wired types are: bool, enum, int32, 
+		# uint32, int64, uint64, double, string, uuid, date, 
+		# data, oobdata, list
+		class SpecType < SpecItem
+			# The size attribute of the data type
+			attr_accessor	:size
+
+			def initialize(name, options = {})
+				@size 	= options[:size]
+				super
+			end
+		end
+
+
+
+		# The Wired::Spec::SpecField class represents a message field
+		# into the Wired specification: <p7:field />
+		class SpecField < SpecItem
+			# The type attribute of the field
+			attr_accessor	:type
+			# The required attribute of the field
+			attr_accessor	:required
+
+			def initialize(name, options = {})
+				@type 		= options[:type]
+				@required 	= options[:required]
+				super
+			end
+		end
+
+
+
+		# The Wired::Spec::SpecCollection class represents a collection
+		# of fields: <p7:collection />
+		class SpecCollection < SpecItem
+			# An array of field name
+			attr_accessor	:fields
+
+			def initialize(name, options = {})
+				@fields 	= options[:fields]
+				super
+			end
+		end
+
+
+
+		# The Wired::Spec::SpecMessage class represents a message: <p7:message />
+		# The Wired::Spec::SpecMessage class inherits from Wired::Spec::SpecCollection
+		# and here the @fields attribute is used as an array of Wired::Spec::SpecField.
+		class SpecMessage < SpecCollection
+			def initialize(name, options = {})
+				@fields	   = options[:fields]
+				super
+			end
+
+		end
+
+
+		# The Wired::Spec::SpecTransaction class represents a message transaction.
+		# TODO: Add support for transaction, andor and replies.
+		class SpecTransaction < SpecItem
+			
+		end
+
+
+		# @return [String] The path of the XML specification file (i.e. wired.xml)
 		attr_accessor	:path
+
+		# @return [Nokogiri::XML] A reference to the XML document built against
+		# the XML specification file
 		attr_accessor 	:doc
+
+		# @return [Nokogiri::XML] A reference to the Nokogiri::XML document built against 
+		# the XML built-in specification (see Wired::Spec.initialize)
 		attr_accessor 	:builtindoc
 
+		# @return [Array] An array of Wired::Spec::SpecType objects 
 		attr_accessor	:types
+
+		# @return [Hash] A hash of Wired::Spec::SpecField objects, stored by id
 		attr_accessor	:fields_by_id
+
+		# @return [Hash] A hash of Wired::Spec::SpecField objects, stored by name
 		attr_accessor	:fields_by_name
+
+		# @return [Hash] A hash of Wired::Spec::SpecCollection objects, stored by name
 		attr_accessor	:collections
+
+		# @return [Hash] A hash of Wired::Spec::SpecMessage objects, stored by id
 		attr_accessor	:messages_by_id
+
+		# @return [Hash] A hash of Wired::Spec::SpecMessage objects, stored by name
 		attr_accessor	:messages_by_name
+
+		# @return [Hash] A hash of Wired::Spec::SpecTransaction, stored by name
 		attr_accessor	:transactions
 
 	public
+		# Initialize a Wired::Spec object with a given path.
+		# The path shopuld be a valid path to a P7 XML file.
+		#
+		# @param path [String] the path of the specification XML file
+		#
+		# @return [Wired::Spec] A Spec instance
 		def initialize(path)
 			@types 				= Hash.new
 			@fields_by_id 		= Hash.new
@@ -244,102 +321,71 @@ module Wired
 		end
 
 
-
+		# Returns a SpecMessage object 
+		# for a given name.
+		#
+		# @param name [String] a valid Wired message name
+		#
+		# @return [Wired::Spec::SpecMessage] A SpecMessage instance
 		def spec_message_with_name(name)
 			return @messages_by_name[name]
 		end
 
+
+		# Returns a SpecMessage object 
+		# for a given id.
+		#
+		# @param id [String] a valid Wired message name
+		#
+		# @return [Wired::Spec::SpecMessage] A SpecMessage instance
 		def spec_message_with_id(id)
 			return @messages_by_id[id]
 		end
 
+
+		# Returns a SpecCollection object 
+		# for a given name.
+		#
+		# @param name [String] a valid Wired collection name
+		#
+		# @return [Wired::Spec::SpecCollection] A SpecCollection instance
 		def spec_collection_with_name(name)
 			return @collections[name]
 		end
 
+
+		# Returns a Wired::Spec::SpecField object 
+		# for a given name.
+		#
+		# @param name [String] a valid Wired field name
+		#
+		# @return [Wired::Spec::SpecField] A SpecField instance
 		def spec_field_with_name(name)
 			return @fields_by_name[name]
 		end
 
+
+
+		# Returns a Wired::Spec::SpecField object 
+		# for a given id.
+		#
+		# @param id [String] a valid Wired field id
+		#
+		# @return [Wired::Spec::SpecField] A SpecField instance
 		def spec_field_with_id(id)
 			return @fields_by_id[id]
 		end
 
 
-		# create a XML message template against the specification for a given name
-		def xml_message_with_name(name)
-			spec_message 	= @messages_by_name[name]
-			query 			= "//protocol/messages/message[@name='" + name + "']/parameter"
 
-			builder = Nokogiri::XML::Builder.new(:encoding => 'UTF-8') do |xml|
-				parameters = spec_message.document.xpath(query).map 
-
-				if parameters
-					xml.message("name" => name, "xmlns:p7" => "http://www.zankasoftware.com/P7/Message") {
-						parameters.each do |parameter|	
-							type  = parameter.attribute_nodes.first.name
-							value = parameter.attribute_nodes.first.value
-							if(type == "field")
-								xml["p7"].field("name" => value){ 
-									xml.text ""
-								}
-							elsif(type == "collection")
-								collection = @collections[value]
-								collection.fields.each do |field_name|
-									xml["p7"].field("name" => field_name){ 
-										xml.text ""
-									}
-								end
-							end
-						end
-					}
-				end
-			end
-
-			builder.doc.root.name = "p7:message"
-			return builder.to_xml
-		end
-
-
-		# create a XML message template against the specification for a given id
-		def xml_message_with_id(id)
-			spec_message 	= @messages_by_id[id]
-			query 			= "//protocol/messages/message[@name='" + name + "']/parameter"
-
-			builder = Nokogiri::XML::Builder.new(:encoding => 'UTF-8') do |xml|
-				parameters = spec_message.document.xpath(query).map 
-
-				if parameters
-					xml.message("name" => spec_message.name, "xmlns:p7" => "http://www.zankasoftware.com/P7/Message") {
-						parameters.each do |parameter|	
-							type  = parameter.attribute_nodes.first.name
-							value = parameter.attribute_nodes.first.value
-							if(type == "field")
-								xml["p7"].field("name" => value){ 
-									xml.text ""
-								}
-							elsif(type == "collection")
-								collection = @collections[value]
-								collection.fields.each do |field_name|
-									xml["p7"].field("name" => field_name){ 
-										xml.text ""
-									}
-								end
-							end
-						end
-					}
-				end
-			end
-
-			builder.doc.root.name = "p7:message"
-			return builder.to_xml
-		end
-
-
-
-		# verify a message against the specification
+		# Verify a message against the specification
+		#
+		# @param message [Wired::Message] a message object
+		#
+		# TODO: check that the message respects requirements
+		# of the Wired specification
 		def verify_message(message)
-			
+
 		end
 
 

@@ -22,22 +22,22 @@ module Wired
 
 	# This class handles Wired URL representation and operations.
 	class Url
-		# The base string of the URL
+		# @return [String] The base string of the URL
 		attr_accessor	:base
 
-		# The scheme of the URL (wired:// or wiredp7://)
+		# @return [String] The scheme of the URL (wired:// or wiredp7://)
 		attr_accessor	:scheme
 
-		# The login of the URL
+		# @return [String] The login of the URL
 		attr_accessor	:login
 
-		# The password of the URL
+		# @return [String] The password of the URL
 		attr_accessor	:password
 
-		# The hostname of the URL
+		# @return [String] The hostname of the URL
 		attr_accessor	:hostname
 
-		# The port of the URL
+		# @return [String] The port of the URL
 		attr_accessor	:port
 
 
@@ -45,20 +45,33 @@ module Wired
 		# URL string and set local attributes with found values
 		#
 		# @param base [String] the base string of the URL
+		# @option options [String] :hostname The hostname of the URL
+		# @option options [String] :login The login of the URL
+		# @option options [String] :password The password of the URL
+		# @option options [String] :scheme The scheme of the URL (wired:// or wiredp7://)
+		# @option options [String] :port The port of the URL
 		#
 		# @return A Wired::Url instance
-		def initialize(base)
+		def initialize(base, options = {})
 			@base 	= base
 
 			@scheme = "wired" # default scheme
 
-			if base != nil
-				decompose(base)
-			end
+			# decompose the URL if base given
+			decompose(base) if base != nil
+
+			# overwrite with options, UNTESTED !
+			@hostname 	||= options[:hostname]
+			@login 		||= options[:login]
+			@password 	||= options[:password]
+			@scheme 	||= options[:scheme]
+			@port 		||= options[:port]
 		end
 		
 	
 		# Returns the String representation of the URL
+		#
+		# @return A Wired::Url instance
 		def to_s
 	     	uri = URI::Generic.new(
 					@scheme, 
@@ -83,7 +96,7 @@ module Wired
 			uri 		= URI(url_string)
 			@hostname 	= uri.host 		|| '127.0.0.1'
 			@login 		= uri.user 		|| 'guest'
-			@password 	= uri.password 
+			@password 	= uri.password 	|| ''
 			@scheme 	= uri.scheme	|| 'wired'
 			@port 		= uri.port		|| '4871'
 		end

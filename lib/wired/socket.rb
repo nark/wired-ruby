@@ -13,52 +13,100 @@
 # Date::    Saturday May 29, 2013
 #
 module Wired
+	# This class provides the network IO logic for Wired protocol
+	# communications. It wraps a Ruby socket object and many attributes
+	# required to comply with the Wired network protocol, including
+	# data serialization, compression and encryption of data.
 	class Socket
 		require 'socket'
 		require 'timeout'
 		require 'openssl'
 		require 'zlib'
 
+
+		# The default length size of a binary field
 		SOCKET_LENGTH_SIZE		= 4
+
+		# The maximal size of a binary message
 		SOCKET_MAX_BINARY_SIZE 	= (10 * 1024 * 1024)
 
-		# Data Serialization Modes
+
+
+		# This module enumerates supported serialization modes
 		module Serialization
-		  XML 			= 0
-		  BINARY 		= 1
+			# XML serialization of data
+		  	XML 	=  0
+		  	# Binary serialization of data
+		  	BINARY 	=  1
+		end
+
+
+		# This module enumerates supported compression modes
+		module Compression
+			# No compression
+			NONE 	= -1
+			# Gzip compression enabled
+			DEFLATE =  0
 		end
  
 
-		# Checksum Types
+		# This module enumerates supported compression algorithms
 		module Checksum
-		  SHA1 			= 0
+			# Secure Hash algorithm standard (NIST: FIPS)
+		  	SHA1 =  0
 		end
 
 
-		# Encryption Ciphers
+		# This module enumerates supported encryption ciphers
 		module Cipher
-		  NONE			= -1
-		  RSA_AES_128 	= 0
-		  RSA_AES_192 	= 1
-		  RSA_AES_256 	= 2
-		  RSA_BF_128 	= 3
-		  RSA_3DES_192 	= 4
+			# No cipher (communication will not be encrypted)
+		  	NONE 			= -1
+		  	# RSA Advanced Encryption Standard 128 bits
+		  	RSA_AES_128 	=  0
+		  	# RSA Advanced Encryption Standard 192 bits
+		  	RSA_AES_192 	=  1
+		  	# RSA Advanced Encryption Standard 256 bits
+		  	RSA_AES_256 	=  2
+		  	# RSA Blowfish 128 bits
+		  	RSA_BF_128 		=  3
+		  	# RSA Data Encryption Standard 192 bits
+		  	RSA_3DES_192 	=  4 
 		end
 
-		# Accessors
-		attr_accessor 	:hostname
-		attr_accessor 	:port
-		attr_accessor 	:spec
-		attr_accessor 	:serialization
-		attr_accessor 	:compression
-		attr_accessor 	:cipher
-		attr_accessor 	:timeout
-		attr_accessor 	:errors
 
-		attr_reader		:compression_enabled
-		attr_reader		:encryption_enabled
+		# @return [String] The hostanme for the socket to connect 
+		attr_accessor :hostname
+
+		# @return [Integer] The network port for the socket to connect
+		attr_accessor :port
+
+		# @return [Wired::Spec] The attached specification object
+		attr_accessor :spec
+
+		# @return [Wired::Socket::Serialization] Data serialization mode
+		attr_accessor :serialization
+
+		# @return [Wired::Socket::Compression] Data compression mode
+		attr_accessor :compression
+
+		# @return [Wired::Socket::Cipher] Data encryption cipher
+		attr_accessor :cipher
+
+		# @return [Integer] Connect timeout
+		attr_accessor :timeout
+
+		# @return [Array] Array of Wired errors
+		attr_accessor :errors
+
+		# @return [Boolean] Compression enabled internally
+		attr_reader :compression_enabled
+
+		# @return [Boolean] Encryption enabled internally
+		attr_reader :encryption_enabled
 
 
+
+		
 		def initialize(hostname, spec, options = {})
 			@errors				= Array.new
 			@hostname 			= hostname
@@ -68,9 +116,9 @@ module Wired
 
      	 	@port 				= options[:port] || 4875
      	 	@timeout 			= options[:timeout] || 10.0
-     	 	@serialization 		= options[:serialization]
-     	 	@compression 		= options[:compression]
-     	 	@cipher				= options[:cipher] || Wired::Socket::Cipher::NONE
+     	 	@serialization 		= options[:serialization] || Wired::Socket::Serialization::BINARY
+     	 	@compression 		= options[:compression] || Wired::Socket::Cipher::NONE
+     	 	@cipher				= options[:cipher] || Wired::Socket::Compression::NONE
 
      	 	@private_key		= nil
      	 	@public_key 		= nil
@@ -127,21 +175,19 @@ module Wired
 
 		def read
 			message = nil
-
+			# check socket serialization mode
 			if(@serialization == Wired::Socket::Serialization::XML)
 				message = ""
-
-				while line = @socket.read
-					if line != "\r\n"
-						message = message + line
-					else
-						break
-					end
+				# read XML data line by line to compute a message
+				while line = @socket.gets
+					break if line == "\r\n"
+					message = message + line
 				end
 
+				# create a message based on XML
 				if message.length > 0
 					message = Wired::Message.new(:spec => @spec, :xml => message)
-					
+					# internally handle the message (logging, errors, etc.)
 					handle_message message
 
 					return message
@@ -149,39 +195,42 @@ module Wired
 
 			elsif(@serialization == Wired::Socket::Serialization::BINARY)
 				begin
-  					length 	= read_binary_data(SOCKET_LENGTH_SIZE, "N")
+					# read message length
+  					length = @socket.readpartial(SOCKET_LENGTH_SIZE).unpack("N")[0]
 
   					if(length <= 0 || length > SOCKET_MAX_BINARY_SIZE)
   						Wired::LOGGER.error "Invalid message length: " + length.to_s
   						return nil
   					end
 
-  					id 		= @socket.readpartial(SOCKET_LENGTH_SIZE).unpack("N")[0]
-  					message = Wired::Message.new(:spec => @spec, :id => id.to_s)
+  					# read message binary payload
+  					binary = @socket.readpartial(length)
 
-  					if(message == nil)
-  						Wired::LOGGER.error "Unknow message with id: " + id.to_s
-  						return nil
-  					end
+  					if binary.length > 0
+	  					# decompress data
+						if @compression_enabled
+							binary = inflate_data(binary) 
+						end
 
-  					read_size = 0
+						# decrypt data
+						if @cipher != Wired::Socket::Cipher::NONE && @public_key != nil
+							#binary = @public_key.encrypt(binary)
+						end
 
-  					while ((read_size < length) && (bin = @socket.readpartial(SOCKET_LENGTH_SIZE))) do
-  						name, value, size = read_binary_field(bin)
+						# create message with binary data
+	  					message = Wired::Message.new(:spec => @spec, :binary => binary)
 
-  						message.add_parameter(name, value)
+  						# internally handle the message (logging, errors, etc.)
+	  					handle_message message
 
-  						read_size += (SOCKET_LENGTH_SIZE * 2) + size
-
-  						break if (read_size > length || (length-read_size) < SOCKET_LENGTH_SIZE)
-  					end
-
+						return message
+	  				end
 				rescue Errno::EAGAIN
 					IO.select([@socket])
 					retry 
 				rescue EOFError
 				end
-
+				# internally handle the message (logging, errors, etc.)
 				handle_message message
 
 				return message
@@ -194,21 +243,23 @@ module Wired
 
 
 		def write(message)
-			Wired::LOGGER.debug "Sent Message:\n " + message.name + "\n\n"
-
+			Wired::LOGGER.debug "Sent Message: " + message.name
+			# check socket serialization mode
 			if(!@serialization || @serialization == Wired::Socket::Serialization::XML)
+				# write the message as XML on the socket
+				# \r\n is used as message EOF
 				@socket.write message.to_xml.to_s+"\r\n"
 
 			elsif(@serialization == Wired::Socket::Serialization::BINARY)
 				# convert message to binary data
 				binary = message.to_bin
 
-				# compress data
+				# compress binary data
 				if @compression_enabled
 					binary = deflate_data(binary) 
 				end
 
-				# encrypt data
+				# encrypt binary data
 				if @cipher != Wired::Socket::Cipher::NONE && @public_key != nil
 					#binary = @public_key.encrypt(binary)
 				end
@@ -216,8 +267,9 @@ module Wired
 				#Wired::LOGGER.debug "Binary Data: " + binary.unpack("H*").to_s
 				#Wired::LOGGER.debug "Binary Size: " + binary.length.to_s
 
-				# write data
+				# write binary data length through the sopcket
 				@socket.write [binary.length].pack("N");
+				# write binary data through the sopcket
 				@socket.write binary
 			end
 		end
@@ -237,19 +289,19 @@ module Wired
 			message = Wired::Message.new(:spec => @spec, :name => "p7.handshake.client_handshake")
 			# protocol
 			message.add_parameters({
-				"p7.handshake.version" => "1.0",
-				"p7.handshake.protocol.name" => "Wired",
+				"p7.handshake.version" 			=> "1.0",
+				"p7.handshake.protocol.name" 	=> "Wired",
 				"p7.handshake.protocol.version" => "2.0b55"
 				})
 
 			# settings
 			if(@serialization == Wired::Socket::Serialization::BINARY)
 				if @encryption_enabled
-					message.add_parameter("p7.handshake.encryption", Wired::Socket::Cipher::RSA_AES_256)
+					message.add_parameter("p7.handshake.encryption", @cipher)
 				end
 
-				if @compression
-					message.add_parameter("p7.handshake.compression", 1)
+				if @compression == Wired::Socket::Compression::DEFLATE
+					message.add_parameter("p7.handshake.compression", 0)
 				end
 			end
 
@@ -267,7 +319,10 @@ module Wired
 			end
 
 			puts message.to_xml
-			#@compression_enabled = @compression if @compression = true
+
+			if(message.parameter("p7.handshake.compression") == 0)
+				@compression_enabled = true
+			end
 
 			message = Wired::Message.new(:spec => @spec, :name => "p7.handshake.acknowledge")
 			message.add_parameter("p7.handshake.compatibility_check", false)
@@ -301,7 +356,7 @@ module Wired
 
 	private
 		def handle_message(message) 
-			Wired::LOGGER.debug "Received Message:\n " + message.name + "\n\n"
+			Wired::LOGGER.debug "Received Message: " + message.name
 
 			handle_error message if message.name == "wired.error"
 		end
@@ -314,63 +369,6 @@ module Wired
 			@errors.push message
 	    end
 
-
-
-
-		def read_binary_data(length, format)
-			data = @socket.readpartial(length)
-
-			if @compression_enabled
-				data = inflate_data(data)
-			end
-
-			data = data.unpack(format)[0]
-
-			return data
-		end
-
-
-
-
-		def read_binary_field(binary)
-			field_id 	= binary.unpack("N")[0]
-			field 		= @spec.spec_field_with_id(field_id.to_s)
-
-			if(field == nil)
-				Wired::LOGGER.error "Unknow field with id: " + id.to_s
-				return nil
-			end
-
-			size 		= @socket.readpartial(SOCKET_LENGTH_SIZE).unpack("N")[0].to_i || 0
-			value 		= read_binary_field_value(field, size)
-			name 		= field.name
-
-			return name, value, size
-		end
-
-
-
-
-		def read_binary_field_value(field, size)
-			value = @socket.readpartial(size).unpack("H" + (size+2).to_s)[0]
-
-			# Wired types: bool, enum, int32, uint32, int64, uint64, double 
-			# string, uuid, date, data, oobdata, list
-			case field.type
-			when "string"
-			  value = [value].pack("H*")
-
-			when "bool"
-			when "enum"
-			when "int32"
-			when "uint32"
-			  value = value.to_i
-			else
-			  Wired::LOGGER.error 'Unknow type:' + field.type
-			end
-
-			return value
-		end
 
 
 

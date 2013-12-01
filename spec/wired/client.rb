@@ -8,16 +8,16 @@ module Wired
 			@url 	= Wired::Url.new("wired://localhost")
 		end
 
-		context "::new" do
-			it "should create a new custom Wired Client object" do
-				nick 			= "Nark"
-				status 			= "Testing"
-				client			= Wired::Client.new(@spec, :nick => nick, :status => status)
+		# context "::new" do
+		# 	it "should create a new custom Wired Client object" do
+		# 		nick 			= "Nark"
+		# 		status 			= "Testing"
+		# 		client			= Wired::Client.new(@spec, :nick => nick, :status => status)
 
-				client.nick.should		eql nick
-				client.status.should	eql status
-			end
-		end
+		# 		client.nick.should		eql nick
+		# 		client.status.should	eql status
+		# 	end
+		# end
 
 
 		context "::connect" do
