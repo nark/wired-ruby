@@ -71,4 +71,4 @@ And run:
 		puts response.to_s
 	}	
 
-Have a look to 
+Have a look to rspec tests and to the source code for more examples.
