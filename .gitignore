@@ -13,10 +13,10 @@
 /tmp/
 
 ## Documentation cache and generated files:
-/.yardoc/
-/_yardoc/
-/doc/
-/rdoc/
+.yardoc/
+_yardoc/
+doc/
+rdoc/
 .yardoc
 
 ## Environment normalisation:
