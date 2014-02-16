@@ -1,6 +1,7 @@
 module Wired 
 	require 'logging'
 
-	LOGGER 			= Logging.logger(STDOUT)
-	LOGGER.level 	= :debug
+	# @return [Logging] The logger used internally by the library
+	Log 			= Logging.logger(STDOUT)
+	Log.level 		= :debug
 end

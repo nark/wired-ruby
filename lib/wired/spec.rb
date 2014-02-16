@@ -1,23 +1,9 @@
-# == spec.rb
-# This file contains the Wired::Spec class definition. This class
-# is a wrapper for the Wired 2.0 specification. The specification
-# is based on a XML file named "wired.xml" that defines types, fields,
-# messages, transactions and many other data-structures that are 
-# used by the Wired protocol. 
+# Wired-Ruby is a light programming library that implements 
+# the Wired 2.0 protocol in Ruby language. This source code 
+# is a working base mainly used to understand better the 
+# Wired 2.0 protocol specifications.
 #
-# The Spec class also takes care of the built-in XSD specification
-# internally used by the protocol to establish communication.
-#
-# == Example
-#
-#	spec	= Wired::Spec.new("wired.xml")
-#
-# == Contact
-#
-# Author::  Rafaël Warnault (mailto:dev@read-write.fr)
-# Website:: http://wired.read-write.fr
-# Date::    Saturday Nov 30, 2013
-#
+# @author Rafaël Warnault (mailto:dev@read-write.fr)
 module Wired
 
 	# This class is a wrapper for the Wired 2.0 specification. 
@@ -28,6 +14,14 @@ module Wired
 	# and verify messages against the specification. It defines
 	# a set of classes and methods that abstract and optimize
 	# operations around the XML specification.
+	#
+	# The Spec class also takes care of the built-in XSD specification
+	# internally used by the protocol to establish communication.
+	#
+	# @example Initialize a specification based on a XML file
+	# 	spec = Wired::Spec.new("wired.xml")
+	#
+	# @author Rafaël Warnault (mailto:dev@read-write.fr)
 	class Spec
 		require 'nokogiri'
 		require 'deep_clone'
@@ -138,8 +132,11 @@ module Wired
 		# the XML built-in specification (see Wired::Spec.initialize)
 		attr_accessor 	:builtindoc
 
-		# @return [Array] An array of Wired::Spec::SpecType objects 
+		# @return [Array] An array of Wired::Spec::SpecType objects, stored by id
 		attr_accessor	:types
+
+		# @return [Array] An array of Wired::Spec::SpecType objects, stored by name
+		attr_accessor	:types_by_name
 
 		# @return [Hash] A hash of Wired::Spec::SpecField objects, stored by id
 		attr_accessor	:fields_by_id
@@ -159,6 +156,15 @@ module Wired
 		# @return [Hash] A hash of Wired::Spec::SpecTransaction, stored by name
 		attr_accessor	:transactions
 
+		# @return [String] The version of the built-in protocol specification
+		attr_reader 	:builtin_protocol_version
+
+		# @return [String] The version of the Wired protocol specification
+		attr_reader 	:protocol_version
+
+		# @return [String] The name of the Wired protocol specification
+		attr_reader 	:protocol_name
+
 	public
 		# Initialize a Wired::Spec object with a given path.
 		# The path shopuld be a valid path to a P7 XML file.
@@ -168,12 +174,17 @@ module Wired
 		# @return [Wired::Spec] A Spec instance
 		def initialize(path)
 			@types 				= Hash.new
+			@types_by_name		= Hash.new
 			@fields_by_id 		= Hash.new
 			@fields_by_name		= Hash.new
 			@collections 		= Hash.new
 			@messages_by_id 	= Hash.new
 			@messages_by_name 	= Hash.new
 			@transactions 		= Hash.new
+
+			@builtin_protocol_version = nil
+			@protocol_version 	= nil
+			@protocol_name		= nil
 
 			@path 				= path
 			@doc 				= nil
@@ -307,14 +318,20 @@ module Wired
 	</p7:transactions>
 </p7:protocol>'
 
-			
+			# load the built-in protocol document
 			@builtindoc = Nokogiri::XML(xml)
 			@builtindoc.remove_namespaces!
 
+		    # load the built-in protocol version
+			query = "//protocol/@version"
+			@builtin_protocol_version = @builtindoc.xpath(query).to_s
+
+			# load built-in XML elements
 			load_types 			@builtindoc
 			load_fields 		@builtindoc
 			load_messages 		@builtindoc
 
+			# load the Wired protocol at @path
 			if @path
 				load(@path)
 			end
@@ -378,6 +395,16 @@ module Wired
 
 
 
+		def spec_type_with_id(id)
+			return @types[id]
+		end
+
+
+		def type_id_for_field_id(id)
+			return @fields_by_id[id.to_s].type.id
+		end
+
+
 		# Verify a message against the specification
 		#
 		# @param message [Wired::Message] a message object
@@ -388,6 +415,11 @@ module Wired
 
 		end
 
+
+
+		def is_compatible_with_protocol(name, version)
+			return (@protocol_name == name) && (@protocol_version == version);
+		end
 
 
 
@@ -406,6 +438,13 @@ module Wired
 		    @doc.remove_namespaces! 
 		    # NOTE: namespaces are ignored
 
+		    # load the Wired protocol version
+		    query = "//protocol/@version"
+			@protocol_version = @doc.xpath(query).to_s
+
+			query = "//protocol/@name"
+			@protocol_name = @doc.xpath(query).to_s
+
 		    # load spec items
 			load_fields 		@doc
 			load_collections 	@doc
@@ -419,9 +458,11 @@ module Wired
 
 			doc.xpath(query).each do |node|
 				id 		= node["id"]
-				type 	= SpecType.new( node["name"], :id => id, :size => node["size"], :document => doc )
+				name 	= node["name"]
+				type 	= SpecType.new( name, :id => id, :size => node["size"], :document => doc )
 
-				@types[id] = type unless @types.key?(id)
+				@types[id] 				= type unless @types.key?(id)
+				@types_by_name[name] 	= type unless @types_by_name.key?(name)
 			end
 		end
 
@@ -433,8 +474,9 @@ module Wired
 			doc.xpath(query).each do |node|
 				id 		= node["id"]
 				name 	= node["name"]
+				type 	= @types_by_name[node["type"]]
 
-				field 	= SpecField.new( name, :id => id, :type => node["type"], :version => node["version"], :document => doc )
+				field 	= SpecField.new( name, :id => id, :type => type, :version => node["version"], :document => doc )
 
 				@fields_by_id[id] 		= field #unless @fields_by_id.key?(id)
 				@fields_by_name[name] 	= field #unless @fields_by_name.key?(name)

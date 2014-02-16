@@ -1,4 +1,5 @@
 module Wired
+	# The Wired Client class 
 	class Client
 		require 'digest/sha1'
 
@@ -30,10 +31,12 @@ module Wired
 			@url 		= url
 			options 	= {
 				:port 		 	=> @url.port,
-				:timeout 		=> @options[:timeout],
-				:serialization 	=> Wired::Socket::Serialization::BINARY,
-				:cipher 		=> Wired::Socket::Cipher::NONE,
-				:compression 	=> Wired::Socket::Compression::NONE
+				:timeout 		=> @options[:timeout] || 10,
+				:serialization 	=> @options[:serialization] || Wired::Socket::Serialization::BINARY,
+				:cipher 		=> @options[:cipher] || Wired::Socket::Cipher::RSA_AES_256,
+				:compression 	=> @options[:compression] || Wired::Socket::Compression::NONE,
+				:username 		=> @options[:username] || url.login,
+				:password 		=> @options[:password] || url.password
 			}
 
 			@socket = Wired::Socket.new(@url.hostname, @spec, options)
@@ -63,7 +66,7 @@ module Wired
 		def send_message(message, &block)
 			@socket.write message
 
-			#Wired::LOGGER.debug "Sent Message: " + message.to_xml
+			#Wired::Log.debug "Sent Message: " + message.to_xml
 
 			if(block)
 				response = @socket.read
@@ -77,7 +80,7 @@ module Wired
 
 
 		def receive_message(message)
-			#Wired::LOGGER.debug "Received Message: " + message.to_xml
+			#Wired::Log.debug "Received Message: " + message.to_xml
 
 			if message.name == "wired.send_ping"
 				send_message Wired::Message.new(:spec => @spec, :name => "wired.send_ping")
@@ -108,7 +111,7 @@ module Wired
 					"wired.info.os.name" 				=> "OSX",
 					"wired.info.os.version" 			=> "10.8",
 					"wired.info.arch" 					=> "x86_64",
-					"wired.info.supports_rsrc" 			=> "false"
+					"wired.info.supports_rsrc" 			=> "0"
 				})
 
 			send_message message

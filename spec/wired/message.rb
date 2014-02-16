@@ -10,6 +10,9 @@ module Wired
 			it "should create a new spec" do
 				@message = Wired::Message.new(:spec => @spec, :name => "p7.handshake.client_handshake")
 				@message.add_parameter("p7.handshake.version", "2.0")
+
+				puts @message.to_xml
+				puts @message.to_bin.unpack("H*")[0].to_s
 			end
 		end
 	end

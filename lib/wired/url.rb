@@ -1,26 +1,21 @@
-# == url.rb
-# This file contains the Wired::Url class definition. Wired URLs use 
-# 'wired://' or 'wiredp7://' schemes and handle default informations needed for 
-# an user to properly connect to a Wired server: login, password, hostname 
-# and port.
-#
-# == Example
-#
-#	url				= Wired::Url.new("wired://localhost")
-#	url.login		= "username"
-#	url.password	= "passw0rd"
-#	url.port		= 4875
-#
-# == Contact
-#
-# Author::  Rafaël Warnault (mailto:dev@read-write.fr)
-# Website:: http://wired.read-write.fr
-# Date::    Saturday May 29, 2013
-#
 module Wired
 	require 'uri'
 
-	# This class handles Wired URL representation and operations.
+	# This class handles Wired URL representation and operations. Wired URLs use 
+	# 'wired://' or 'wiredp7://' schemes and handle default informations needed for 
+	# an user to properly connect to a Wired server: login, password, hostname 
+	# and port.
+	#
+	# @example Create an URL, modify it and print it
+	# 	url = Wired::Url.new("wired://localhost")
+	#
+	# 	url.login = "username"
+	# 	url.password = "passw0rd"
+	# 	url.port = 4875
+	#
+	# 	puts url.to_s
+	#
+	# @author Rafaël Warnault (mailto:dev@read-write.fr)
 	class Url
 		# @return [String] The base string of the URL
 		attr_accessor	:base

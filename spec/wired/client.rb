@@ -24,6 +24,9 @@ module Wired
 			it "should connect Wired Client object to localhost server" do
 				client			= Wired::Client.new(@spec)
 
+				@url.login 		= "guest"
+				@url.password 	= ""
+
 				client.connect(@url)
 				#client.join_public_chat
 			end

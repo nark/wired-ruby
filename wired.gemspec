@@ -10,7 +10,7 @@ Gem::Specification.new do |s|
   s.homepage    = 'http://wired.read-write.fr'
   s.license 	  = 'BSD'
 
-  s.required_ruby_version = '>= 1.9.2'
+  s.required_ruby_version = '>= 2.0.0'
 
   s.add_development_dependency('nokogiri', '~> 1.5.5')
   s.add_development_dependency('rspec', '~> 2.13.0')
@@ -19,4 +19,5 @@ Gem::Specification.new do |s|
   s.add_development_dependency('deep_clone')
   s.add_development_dependency('openssl')
   s.add_development_dependency('zlib')
+  s.add_development_dependency('bindata')
 end
