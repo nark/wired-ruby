@@ -27,7 +27,7 @@ module Wired
 
 
 
-		def connect(url)
+		def connect(url, loop = true)
 			@url 		= url
 			options 	= {
 				:port 		 	=> @url.port,
@@ -44,7 +44,7 @@ module Wired
 			if @socket.connect
 				client_info
 				if login
-					ping_loop
+					ping_loop if loop
 
 					return true
 				end
@@ -64,9 +64,9 @@ module Wired
 
 
 		def send_message(message, &block)
-			@socket.write message
+			return if !@socket.connected
 
-			#Wired::Log.debug "Sent Message: " + message.to_xml
+			@socket.write message
 
 			if(block)
 				response = @socket.read
@@ -80,7 +80,7 @@ module Wired
 
 
 		def receive_message(message)
-			#Wired::Log.debug "Received Message: " + message.to_xml
+			return if !@socket.connected
 
 			if message.name == "wired.send_ping"
 				send_message Wired::Message.new(:spec => @spec, :name => "wired.send_ping")
@@ -93,7 +93,7 @@ module Wired
 
 
 		def destroy
-			#@receive_thread.join
+			@receive_thread.join
 			@ping_thread.join
 		end
 
@@ -111,7 +111,7 @@ module Wired
 					"wired.info.os.name" 				=> "OSX",
 					"wired.info.os.version" 			=> "10.8",
 					"wired.info.arch" 					=> "x86_64",
-					"wired.info.supports_rsrc" 			=> "0"
+					"wired.info.supports_rsrc" 			=> "false"
 				})
 
 			send_message message
@@ -145,7 +145,7 @@ module Wired
 
 		def receive_loop
 			@receive_thread = Thread.new(self) {
-				while (message = self.socket.read)
+				while (self.socket.connected and message = self.socket.read)
 					if message
 						self.receive_message message
 					end
@@ -158,7 +158,7 @@ module Wired
 
 		def ping_loop
 			@ping_thread = Thread.new(self) {
-				while (message = self.socket.read)
+				while (self.socket.connected and message = self.socket.read)
 					self.send_message Wired::Message.new(:spec => @spec, :name => "wired.send_ping")
 					sleep 30 
 				end

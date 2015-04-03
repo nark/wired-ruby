@@ -121,6 +121,9 @@ module Wired
 		# @return [String] The name of the remote protocol, retrieved during handshake
 		attr_reader :remote_name
 
+		# @return [Boolean] Socket is connected (mainly used to handle disconnect)
+		attr_accessor :connected
+
 		# Initialize a Wired socket object with a hostname, a spec
 		# and a hash of options.
 		#
@@ -153,6 +156,8 @@ module Wired
      	 	@private_key		= nil
      	 	@public_key 		= nil
      	 	@ssl_cipher			= nil
+
+     	 	@connected 			= false
 		end
 
 
@@ -192,6 +197,8 @@ module Wired
 				end
 			end
 
+			@connected = true
+
 			if handshake
 				# perform the Wired protocol handshake
 				if !connect_handshake?
@@ -217,6 +224,7 @@ module Wired
 
 		# Disconnect the Wired socket
 		def diconnect
+			@connected = false
 			@socket.close
 		end
 
@@ -233,6 +241,7 @@ module Wired
 				message = ""
 				# read XML data line by line to compute a message
 				while line = @socket.gets
+					return nil if !@connected
 					break if line == "\r\n"
 					message = message + line
 				end
@@ -249,7 +258,11 @@ module Wired
 			elsif(@serialization == Wired::Socket::Serialization::BINARY)
 				begin
 					# read message length
-  					length = @socket.readpartial(SOCKET_LENGTH_SIZE).unpack("N")[0]
+					begin
+						length = @socket.readpartial(SOCKET_LENGTH_SIZE).unpack("N")[0]
+					rescue Exception => e
+						return nil
+					end
 
   					if(length <= 0 || length > SOCKET_MAX_BINARY_SIZE)
   						Wired::Log.error "Invalid message length: " + length.to_s
@@ -311,8 +324,6 @@ module Wired
 				# convert message to binary data
 				binary = message.to_bin
 
-				Wired::Log.debug "Binary Data: " + binary.unpack("H*").to_s
-
 				# compress binary data
 				if @compression_enabled
 					binary = deflate_data(binary) 
@@ -323,14 +334,23 @@ module Wired
 					binary = @ssl_cipher.encrypt(binary)
 				end
 
-				#Wired::Log.debug "Binary Data: " + binary.unpack("H*").to_s
-				#Wired::Log.debug "Binary Size: " + binary.to_s.length.to_s
+				binary_length = binary.length
 
 				# write binary data length through the socket
-				@socket.write [binary.to_s.length].pack("N")
+				@socket.write [binary_length].pack("N")
 				# write binary data through the socket
 				@socket.write binary
 			end
+		end
+
+
+		# Write a message then read and return the response to the Wired socket.
+		#
+		# @param message [Wired::Message] A Wired message to send
+		# @return [Wired::Message] A Wired message instance
+		def write_and_read_response(message)
+			write message
+			return read
 		end
 
 
@@ -367,8 +387,7 @@ module Wired
 			end
 
 			# write/read message
-			write message
-			message = read
+			message = write_and_read_response message
 
 			# check received handshake message
 			if !message
@@ -474,8 +493,7 @@ module Wired
 		    message.add_parameter("p7.encryption.username", encrypt_data(@username))
 		    message.add_parameter("p7.encryption.client_password", encrypt_data(client_password1))
 
-		    write message
-		    message = read
+		    message = write_and_read_response message
 
 		    return false if !message
 
@@ -527,38 +545,32 @@ module Wired
 
 		def send_compatibilit_check
 			message = Wired::Message.new(:spec => @spec, :name => "p7.compatibility_check.specification")
-
+			
 			return false if !message
-
-			puts "message id : #{message.id}"
 
 			message.add_parameter("p7.compatibility_check.specification", @spec.doc.to_xml)
 
-			#puts message.to_bin
+			message = write_and_read_response message
 
-			write message
-			#message = read
+			return false if !message
 
-			# return false if !message
+			if message.name != "p7.compatibility_check.status"
+				Wired::Log.error "Message should be 'p7.compatibility_check.status', not '#{message.name}'"
+				return false
+			end
 
-			# if message.name != "p7.compatibility_check.status"
-			# 	Wired::Log.error "Message should be 'p7.compatibility_check.status', not '#{message.name}'"
-			# 	return false
-			# end
+			status =  message.parameter "p7.compatibility_check.status"
+			if status == nil
+				Wired::Log.error "Message has no 'p7.compatibility_check.status' field"
+				return false
+			end
 
-			# status =  message.parameter "p7.compatibility_check.status"
-			# if status == nil
-			# 	Wired::Log.error "Message has no 'p7.compatibility_check.status' field"
-			# 	return false
-			# end
+			if status == false
+				Wired::Log.error "Remote protocol #{@remote_name} #{@remote_version} 
+				is not compatible with local protocol #{@spec.protocol_name} #{@spec.protocol_verion}"
+			end
 
-			# if status == false
-			# 	Wired::Log.error "Remote protocol #{@remote_name} #{@remote_version} 
-			# 	is not compatible with local protocol #{@spec.protocol_name} #{@spec.protocol_verion}"
-			# end
-
-			# return status
-			return false
+			return status
 		end
 
 
@@ -574,7 +586,7 @@ module Wired
 
 
 	    def handle_error(message)
-	    	Wired::Log.error "Received Wired error: " + message.to_s
+	    	Wired::Log.error "Wired Error: " + message.to_s
 			@errors.push message
 	    end
 

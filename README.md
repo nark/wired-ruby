@@ -34,7 +34,7 @@ See `wired.gemspec` files for more details.
 		
 4. Install the gem:
 
-		gem install wired-0.0.1.gem
+		gem install wired-0.0.2.gem
 
 ### In Your Gemfile
 

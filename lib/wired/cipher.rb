@@ -27,23 +27,23 @@ module Wired
 		    @ssl_cipher.key = @cipher_key 	= @ssl_cipher.random_key
 		    @ssl_cipher.iv 	= @cipher_iv 	= @ssl_cipher.random_iv
 
-		    #@ssl_cipher.padding = RSA_PKCS1_OAEP_PADDING
+		    @ssl_cipher.padding = RSA_PKCS1_OAEP_PADDING
 		end
 
 
 		def encrypt(data)
 			@ssl_cipher.encrypt
-			#@ssl_cipher.padding = RSA_PKCS1_OAEP_PADDING
-
-			data = @ssl_cipher.update(data) + @ssl_cipher.final
+			@ssl_cipher.key = @cipher_key
+			@ssl_cipher.iv 	= @cipher_iv 
+			return @ssl_cipher.update(data) + @ssl_cipher.final
 		end
 
 
 		def decrypt(data)
 			@ssl_cipher.decrypt
-			#@ssl_cipher.padding = RSA_PKCS1_OAEP_PADDING
-
-			data = @ssl_cipher.update(data) + @ssl_cipher.final
+			@ssl_cipher.key = @cipher_key
+			@ssl_cipher.iv 	= @cipher_iv 
+			return @ssl_cipher.update(data) + @ssl_cipher.final
 		end
 
 

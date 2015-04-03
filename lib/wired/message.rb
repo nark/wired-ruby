@@ -48,7 +48,7 @@ module Wired
 			double_be 	7,  :read_length => 4 #double (4)
 			stringz 	8,  :read_length => :field_length, :trim_padding => true #string (*)
 			stringz 	9,  :read_length => 16 #uuid (16)
-			stringz 	10, :read_length => 8 #date (8)
+			string 		10, :read_length => 8 #date (8)
 			string 		11, :read_length => :field_length, :trim_padding => true #data (*)
 			stringz 	12, :read_length => 8 #oobdata (8)
 
@@ -209,6 +209,7 @@ module Wired
 			message_data.fields = Array.new
 
 			@parameters.each do |name, value|
+				
 				spec_field = @spec.spec_field_with_name(name)
 				data_field = FieldArray.new(nil, message_data)
 
@@ -219,24 +220,20 @@ module Wired
 						data_field.field_length = value.length+1
 
 					elsif spec_field.type.name == "data"
-						#value = value.rstrip
 						data_field.field_length = value.length
-
-					elsif spec_field.type.name == "bool"
-						#value = value.rstrip
-						#value = (value == "true") ? 1 : 0
-						#puts value.class.to_s
 					end
 				else 
-					data_field.field_length = spec_field.type.size.to_i
+					if spec_field.type.name == "bool"
+						value = (value == "true") ? 1 : 0
+					else
+						data_field.field_length = spec_field.type.size.to_i
+					end
 				end
-
-				#puts "spec_field.type.name: #{spec_field.type.name}"
 
 				type_choice = TypeChoice.new({:selection => spec_field.type.id.to_i}, data_field)
 				type_choice.value = value
-
 				data_field.data = type_choice
+
 				message_data.fields.push data_field
 			end
 
@@ -303,9 +300,9 @@ module Wired
 
 		def load_message_for_binary(binary)	
 			message_data = MessageData.new
-
 			message_data.spec = @spec
-			#BinData::trace_reading do
+
+			#BinData::trace_reading do # used to debug bindata gem
 				message_data.read(binary)
 			#end
 
