@@ -12,7 +12,8 @@ Wired-Ruby is a light programming library that implements the Wired 2.0 protocol
 * logging
 * deep_clone
 * openssl
-* zlib
+* bindata
+* przlib
 
 See `wired.gemspec` files for more details.
 
@@ -50,25 +51,28 @@ And run:
 
 	require "wired"
 
-	# Create a Wired Spec object based on "wired.xml" file
-	spec = Wired::Spec.new "wired.xml"
+	# Create a Wired Spec object
+	spec = Wired::Spec.new
 	
-	# Create a Wired Url object pointing to "localhost"
+	# Create a Wired Url object
 	url = Wired::Url.new "wired://localhost"
 	
 	# Create a Client object against the specification
-	client = Wired::Client.new spec 
+	client = Wired::Client.new(spec)
 	
 	# Connect the client to the url
-	client.connect url
+	exit if !client.connect url
 	
-	# Create a "wired.chat.join_chat" message to join the public chat
-	message = Wired::Message.new(:name => "wired.chat.join_chat", :spec => spec)
-	message.add_parameter("wired.chat.id", 1)
+	# Create a "wired.chat.say" to post in the public chat	message = Wired::Message.new(:name => "wired.chat.send_say", :spec => spec)
+    message.add_parameter("wired.chat.id", 1)
+    message.add_parameter("wired.chat.say", content)
 	
-	# Send the message through the client and print the response
-	client.send_message(message) {|response|
-		puts response.to_s
-	}	
+	# Send the message to the server
+	client.send_message(message)
+	
+	# Wait for the response from the server
+	response = client.receive_message
 
-Have a look to rspec tests and to the source code for more examples.
+Have a look to `bin/rwire` code, rspec test cases and the source code for more examples.
+
+	
