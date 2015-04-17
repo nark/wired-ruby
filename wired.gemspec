@@ -20,5 +20,5 @@ Gem::Specification.new do |s|
   s.add_development_dependency('openssl')
   s.add_development_dependency('zlib')
   s.add_development_dependency('bindata')
-  
+  s.add_development_dependency('pr-zlib')
 end

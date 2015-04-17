@@ -14,8 +14,8 @@ module Wired
 		require 'timeout'
 		require 'openssl'
 		require 'digest/sha1'
-		require 'zlib'
-
+		#require 'zlib'
+		require 'pr/zlib'
 
 		# The default length size of a binary field
 		SOCKET_LENGTH_SIZE		= 4
@@ -48,7 +48,8 @@ module Wired
 		# This module enumerates supported compression algorithms
 		module Checksum
 			# Secure Hash algorithm standard (NIST: FIPS)
-		  	SHA1 =  0
+		  	SHA1 	=  0
+		  	SHA256 	= 1
 		end
 
 
@@ -150,8 +151,8 @@ module Wired
      	 	@username 			= options[:username] || "guest"
      	 	@password 			= options[:password] || ""
      	 	@serialization 		= options[:serialization] || Wired::Socket::Serialization::BINARY
-     	 	@compression 		= options[:compression] || Wired::Socket::Cipher::NONE
-     	 	@cipher				= options[:cipher] || Wired::Socket::Compression::NONE
+     	 	@compression 		= options[:compression] || Wired::Socket::Compression::NONE
+     	 	@cipher				= options[:cipher] || Wired::Socket::Cipher::RSA_AES_256
 
      	 	@private_key		= nil
      	 	@public_key 		= nil
@@ -435,6 +436,8 @@ module Wired
 				end
 			end
 
+			puts "@compression_enabled : #{@compression_enabled}"
+
 			if(message.parameter("p7.handshake.compatibility_check") == false)
 				@remote_compatibility_check = false 
 			end
@@ -478,50 +481,50 @@ module Wired
 			return false if !@ssl_cipher
 
 			# Create username and password for authentification
-			@username		 = !@username ? "" : @username	
-		    password_sha1	 = sha1_data(!@password ? "" : @password)
-		    client_password1 = sha1_data(password_sha1 + rsa)
-			client_password2 = sha1_data(rsa << password_sha1)
+			@username		 			= !@username ? "" : @username	
+	    password_sha1	 		= sha1_data(!@password ? "" : @password)
+	    client_password1 	= sha1_data(password_sha1 + rsa)
+			client_password2 	= sha1_data(rsa << password_sha1)
 
 			return false if !@username
 			return false if !password_sha1
 
 			# Send client key and authentification
-		    message = Wired::Message.new(:spec => @spec, :name => "p7.encryption.client_key")
-		    message.add_parameter("p7.encryption.cipher.key", encrypt_data(@ssl_cipher.cipher_key))
-		    message.add_parameter("p7.encryption.cipher.iv", encrypt_data(@ssl_cipher.cipher_iv))	    
-		    message.add_parameter("p7.encryption.username", encrypt_data(@username))
-		    message.add_parameter("p7.encryption.client_password", encrypt_data(client_password1))
+	    message = Wired::Message.new(:spec => @spec, :name => "p7.encryption.client_key")
+	    message.add_parameter("p7.encryption.cipher.key", encrypt_data(@ssl_cipher.cipher_key))
+	    message.add_parameter("p7.encryption.cipher.iv", encrypt_data(@ssl_cipher.cipher_iv))	    
+	    message.add_parameter("p7.encryption.username", encrypt_data(@username))
+	    message.add_parameter("p7.encryption.client_password", encrypt_data(client_password1))
 
-		    message = write_and_read_response message
+	    message = write_and_read_response message
 
-		    return false if !message
+	    return false if !message
 
-		    if message.name == "p7.encryption.authentication_error"
-		    	Wired::Log.error "Authentification failed for #{@username}"
-		    	return false
-		    end
+	    if message.name == "p7.encryption.authentication_error"
+	    	Wired::Log.error "Authentification failed for #{@username}"
+	    	return false
+	    end
 
-		    if message.name != "p7.encryption.acknowledge"
-		    	Wired::Log.error "Message should be 'p7.encryption.acknowledge', not '#{message.name}'"
-		    	return false
-		    end
+	    if message.name != "p7.encryption.acknowledge"
+	    	Wired::Log.error "Message should be 'p7.encryption.acknowledge', not '#{message.name}'"
+	    	return false
+	    end
 
-		    encrypted_password = message.parameter("p7.encryption.server_password")
+	    encrypted_password = message.parameter("p7.encryption.server_password")
 
-		    if !encrypted_password
-		    	Wired::Log.error "Message has no 'p7.encryption.server_password' field"
-		    	return false
-		    end
+	    if !encrypted_password
+	    	Wired::Log.error "Message has no 'p7.encryption.server_password' field"
+	    	return false
+	    end
 
-		    server_password = @ssl_cipher.decrypt(encrypted_password)
+	    server_password = @ssl_cipher.decrypt(encrypted_password)
 
-		    if !check_passwords(server_password, client_password2)
-		    	Wired::Log.error "Password mismatch during key exchange"
-		    	return false
-		    end
+	    if !check_passwords(server_password, client_password2)
+	    	Wired::Log.error "Password mismatch during key exchange"
+	    	return false
+	    end
 
-		    @encryption_enabled = true
+	    @encryption_enabled = true
 
 			return true
 		end
@@ -594,13 +597,40 @@ module Wired
 
 
 		def deflate_data(data)
-		  return Zlib::Deflate.deflate(data)		  
+			c_stream 						= Z_stream.new
+			c_stream.data_type 	= Z_UNKNOWN
+
+			data_length		 			= data.length
+			data 								= Bytef.new(data)
+
+	    compressed_length		= (data.length * 2) + 16
+	    compressed_data 		= Bytef.new(0.chr * compressed_length)
+
+	    err = deflateInit(c_stream, Z_DEFAULT_COMPRESSION)
+	    if(err != Z_OK)
+		    raise RuntimeError,"error: deflateInit #{err}"
+		  end
+
+	    c_stream.next_in  	= data
+	    c_stream.avail_in 	= data.length
+	    c_stream.next_out 	= compressed_data
+	    c_stream.avail_out 	= compressed_length
+
+	    err = deflate(c_stream, Z_FINISH)
+		  raise RuntimeError,"error: deflate #{err}" if(err != Z_STREAM_END)
+
+		  compressed_data = compressed_data.buffer
+
+	    err = deflateEnd(c_stream)
+		  raise RuntimeError,"error: deflateEnd #{err}" if(err != Z_OK)
+
+	    return compressed_data
 		end
 
 
 
 		def inflate_data(data)
-		  return Zlib::Inflate.inflate(data)		  
+		  #return Zlib::Inflate.inflate(data, Zlib::DEFAULT_COMPRESSION)		  
 		end
 
 

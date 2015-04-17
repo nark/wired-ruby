@@ -37,6 +37,12 @@ module Wired
 		require 'bindata'
 
 
+		class ListFieldArray < BinData::Record
+			int32be :field_id
+			stringz :field_length
+		end
+
+
 
 		class TypeChoice < BinData::Choice
 			bit1 		1,  :read_length => 1 #boolean (1)
@@ -51,6 +57,7 @@ module Wired
 			string 		10, :read_length => 8 #date (8)
 			string 		11, :read_length => :field_length, :trim_padding => true #data (*)
 			stringz 	12, :read_length => 8 #oobdata (8)
+			array 		13, :type => :list_field_array, :read_until => :eof
 
 			def field_length
 				return parent.field_length
@@ -76,7 +83,7 @@ module Wired
 
 			def has_length?
 				choice = self.real_parent.spec.type_id_for_field_id(field_id).to_i
-				return (choice == 8 || choice == 11)
+				return (choice == 8 || choice == 11 || choice == 13)
 			end
 		end
 
@@ -221,6 +228,7 @@ module Wired
 
 					elsif spec_field.type.name == "data"
 						data_field.field_length = value.length
+
 					end
 				else 
 					if spec_field.type.name == "bool"
@@ -301,6 +309,8 @@ module Wired
 		def load_message_for_binary(binary)	
 			message_data = MessageData.new
 			message_data.spec = @spec
+
+			#puts "binary : "+ binary.unpack("H*").to_s
 
 			#BinData::trace_reading do # used to debug bindata gem
 				message_data.read(binary)

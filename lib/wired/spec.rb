@@ -172,7 +172,7 @@ module Wired
 		# @param path [String] the path of the specification XML file
 		#
 		# @return [Wired::Spec] A Spec instance
-		def initialize(path)
+		def initialize(path = nil)
 			@types 				= Hash.new
 			@types_by_name		= Hash.new
 			@fields_by_id 		= Hash.new
@@ -333,7 +333,9 @@ module Wired
 
 			# load the Wired protocol at @path
 			if @path
-				load(@path)
+				load_from_file(@path)
+			else
+				load_from_string($xmlspec)
 			end
 		end
 
@@ -401,7 +403,8 @@ module Wired
 
 
 		def type_id_for_field_id(id)
-			return @fields_by_id[id.to_s].type.id
+			field = @fields_by_id[id.to_s]
+			return field.type.id
 		end
 
 
@@ -425,7 +428,7 @@ module Wired
 
 	private
 		# loads a specification at path
-		def load(path)
+		def load_from_file(path)
 		    begin
 		      file = File.new(path)
 		    rescue
@@ -435,6 +438,25 @@ module Wired
 
 		    # load the XML document
 		    @doc = Nokogiri::XML(file)
+		    @doc.remove_namespaces! 
+		    # NOTE: namespaces are ignored
+
+		    # load the Wired protocol version
+		    query = "//protocol/@version"
+			@protocol_version = @doc.xpath(query).to_s
+
+			query = "//protocol/@name"
+			@protocol_name = @doc.xpath(query).to_s
+
+		    # load spec items
+			load_fields 		@doc
+			load_collections 	@doc
+			load_messages 		@doc
+		end
+
+		def load_from_string(string)
+			# load the XML document
+		    @doc = Nokogiri::XML(string)
 		    @doc.remove_namespaces! 
 		    # NOTE: namespaces are ignored
 

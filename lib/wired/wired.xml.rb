@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+$xmlspec = '<?xml version="1.0" encoding="UTF-8"?>
 <p7:protocol xmlns:p7="http://www.read-write.fr/wired/html/wired.html"
 			 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 			 xsi:schemaLocation="http://www.read-write.fr/wired/html/p7-specification.xsd"
@@ -2275,7 +2275,7 @@
 				[field:wired.file.new_path] should be the full destination path, not just the destination
 				directory.
 				
-				If the server can't move the file, it may perform a copy followed by a delete instead.
+				If the server can\'t move the file, it may perform a copy followed by a delete instead.
 				[field:wired.file.volume] can be used to see if this will be the case.
 			</p7:documentation>
 			<p7:parameter field="wired.transaction" version="2.0" />
@@ -2300,7 +2300,7 @@
 			<p7:documentation>
 				Delete file or directory message. [field:wired.file.path] may not be the empty string.
 				
-				If it's a directory, the servern should perform a recursive delete of the full directory
+				If it\'s a directory, the servern should perform a recursive delete of the full directory
 				tree.
 			</p7:documentation>
 			<p7:parameter field="wired.transaction" version="2.0" />
@@ -3092,7 +3092,7 @@
 				but [field:wired.info.description] and [field:wired.tracker.category] may be.
 				
 				If [field:wired.tracker.ip] is not set, the tracker should register the server using the
-				originating address. [field:wired.tracker.port], however, must be set to the server's
+				originating address. [field:wired.tracker.port], however, must be set to the server\'s
 				listening port.
 			</p7:documentation>
 			<p7:parameter field="wired.transaction" version="2.0" />
@@ -3180,7 +3180,7 @@
 				that other clients see it.
 
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied],
-				if [field:wired.account.user.cannot_set_nick] is set for the user's account.
+				if [field:wired.account.user.cannot_set_nick] is set for the user\'s account.
 				
 				[message:wired.error] should be replied with [enum:wired.error.message_out_of_sequence]
 				if sent before [message:wired.client_info].
@@ -3265,7 +3265,7 @@
 		<p7:transaction message="wired.user.get_info" originator="client" version="2.0">
 			<p7:documentation>
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.user.get_info] is not set for the user's account.
+				if [field:wired.account.user.get_info] is not set for the user\'s account.
 				
 				[message:wired.error] should be replied with [enum:wired.error.message_out_of_sequence]
 				if sent before [message:wired.client_info].
@@ -3284,10 +3284,10 @@
 		<p7:transaction message="wired.user.disconnect_user" originator="client" version="2.0">
 			<p7:documentation>
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.user.disconnect_users] is not set for the user's account.
+				if [field:wired.account.user.disconnect_users] is not set for the user\'s account.
 				
 				[message:wired.error] should be replied with [enum:wired.error.cannot_be_disconnected]
-				if [field:wired.account.user.cannot_be_disconnected] is set for the target user's
+				if [field:wired.account.user.cannot_be_disconnected] is set for the target user\'s
 				account.
 
 				[message:wired.error] should be replied with [enum:wired.error.message_out_of_sequence]
@@ -3310,10 +3310,10 @@
 		<p7:transaction message="wired.user.ban_user" originator="client" version="2.0">
 			<p7:documentation>
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.user.ban_users] is not set for the user's account.
+				if [field:wired.account.user.ban_users] is not set for the user\'s account.
 				
 				[message:wired.error] should be replied with [enum:wired.error.cannot_be_disconnected]
-				if [field:wired.account.user.cannot_be_disconnected] is set for the target user's
+				if [field:wired.account.user.cannot_be_disconnected] is set for the target user\'s
 				account.
 				
 				[message:wired.error] should be replied with [enum:wired.error.message_out_of_sequence]
@@ -3336,7 +3336,7 @@
 		<p7:transaction message="wired.user.get_users" originator="client" version="2.0">
 			<p7:documentation>
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.user.get_users] is not set for the user's account.
+				if [field:wired.account.user.get_users] is not set for the user\'s account.
 				
 				[message:wired.error] should be replied with [enum:wired.error.message_out_of_sequence]
 				if sent before [message:wired.client_info].
@@ -3418,7 +3418,7 @@
 				or the target user is not currently on the chat.
 				
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied] if the chat
-				is the public chat and [enum:wired.account.chat.kick_users] is not set for the user's account.
+				is the public chat and [enum:wired.account.chat.kick_users] is not set for the user\'s account.
 				
 				[message:wired.error] should be replied with [enum:wired.error.message_out_of_sequence]
 				if sent before [message:wired.client_info].
@@ -3445,7 +3445,7 @@
 				is not currently on the chat.
 
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied] if the chat
-				is the public chat and [enum:wired.account.chat.set_topic] is not set for the user's account.
+				is the public chat and [enum:wired.account.chat.set_topic] is not set for the user\'s account.
 				
 				[message:wired.error] should be replied with [enum:wired.error.message_out_of_sequence]
 				if sent before [message:wired.client_info].
@@ -3514,7 +3514,7 @@
 		<p7:transaction message="wired.chat.create_chat" originator="client" version="2.0">
 			<p7:documentation>
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.chat.create_chats] is not set for the user's account.
+				if [field:wired.account.chat.create_chats] is not set for the user\'s account.
 				
 				[message:wired.error] should be replied with [enum:wired.error.message_out_of_sequence]
 				if sent before [message:wired.client_info].
@@ -3587,7 +3587,7 @@
 		<p7:transaction message="wired.message.send_message" originator="client" version="2.0">
 			<p7:documentation>
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.message.send_messages] is not set for the user's account.
+				if [field:wired.account.message.send_messages] is not set for the user\'s account.
 				
 				[message:wired.error] should be replied with [enum:wired.error.message_out_of_sequence]
 				if sent before [message:wired.client_info].
@@ -3608,7 +3608,7 @@
 		<p7:transaction message="wired.message.send_broadcast" originator="client" version="2.0">
 			<p7:documentation>
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.message.broadcast] is not set for the user's account.
+				if [field:wired.account.message.broadcast] is not set for the user\'s account.
 				
 				[message:wired.error] should be replied with [enum:wired.error.message_out_of_sequence]
 				if sent before [message:wired.client_info].
@@ -3810,7 +3810,7 @@
 		<p7:transaction message="wired.file.list_directory" originator="client" version="2.0">
 			<p7:documentation>
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.file.list_files] is not set for the user's account, or if the user
+				if [field:wired.account.file.list_files] is not set for the user\'s account, or if the user
 				does not have applicable permissions for the directory.
 				
 				[message:wired.error] should be replied with [enum:wired.error.file_not_found]
@@ -3840,7 +3840,7 @@
 		<p7:transaction message="wired.file.get_info" originator="client" version="2.0">
 			<p7:documentation>
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.file.get_info] is not set for the user's account, or if the user
+				if [field:wired.account.file.get_info] is not set for the user\'s account, or if the user
 				does not have applicable permissions for the directory.
 				
 				[message:wired.error] should be replied with [enum:wired.error.file_not_found]
@@ -3866,7 +3866,7 @@
 		<p7:transaction message="wired.file.move" originator="client" version="2.0">
 			<p7:documentation>
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.file.move_files] is not set for the user's account, or if the user
+				if [field:wired.account.file.move_files] is not set for the user\'s account, or if the user
 				does not have applicable permissions for the directories.
 				
 				[message:wired.error] should be replied with [enum:wired.error.file_not_found]
@@ -3898,7 +3898,7 @@
 		<p7:transaction message="wired.file.link" originator="client" version="2.0">
 			<p7:documentation>
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.file.link_files] is not set for the user's account, or if the user
+				if [field:wired.account.file.link_files] is not set for the user\'s account, or if the user
 				does not have applicable permissions for the directories.
 				
 				[message:wired.error] should be replied with [enum:wired.error.file_not_found]
@@ -3930,7 +3930,7 @@
 		<p7:transaction message="wired.file.delete" originator="client" version="2.0">
 			<p7:documentation>
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.file.delete_files] is not set for the user's account, or if the user
+				if [field:wired.account.file.delete_files] is not set for the user\'s account, or if the user
 				does not have applicable permissions for the directory.
 				
 				[message:wired.error] should be replied with [enum:wired.error.file_not_found]
@@ -3959,7 +3959,7 @@
 		<p7:transaction message="wired.file.set_type" originator="client" version="2.0">
 			<p7:documentation>
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.file.set_type] is not set for the user's account, or if the user
+				if [field:wired.account.file.set_type] is not set for the user\'s account, or if the user
 				does not have applicable permissions for the directory.
 				
 				[message:wired.error] should be replied with [enum:wired.error.file_not_found]
@@ -3988,7 +3988,7 @@
 		<p7:transaction message="wired.file.set_comment" originator="client" version="2.0">
 			<p7:documentation>
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.file.set_comment] is not set for the user's account, or if the user
+				if [field:wired.account.file.set_comment] is not set for the user\'s account, or if the user
 				does not have applicable permissions for the directory.
 				
 				[message:wired.error] should be replied with [enum:wired.error.file_not_found]
@@ -4017,7 +4017,7 @@
 		<p7:transaction message="wired.file.set_executable" originator="client" version="2.0">
 			<p7:documentation>
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.file.set_executable] is not set for the user's account, or if the user
+				if [field:wired.account.file.set_executable] is not set for the user\'s account, or if the user
 				does not have applicable permissions for the directory.
 				
 				[message:wired.error] should be replied with [enum:wired.error.file_not_found]
@@ -4046,7 +4046,7 @@
 		<p7:transaction message="wired.file.set_label" originator="client" version="2.0">
 			<p7:documentation>
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.file.set_label] is not set for the user's account, or if the user
+				if [field:wired.account.file.set_label] is not set for the user\'s account, or if the user
 				does not have applicable permissions for the directory.
 				
 				[message:wired.error] should be replied with [enum:wired.error.file_not_found]
@@ -4075,7 +4075,7 @@
 		<p7:transaction message="wired.file.set_permissions" originator="client" version="2.0">
 			<p7:documentation>
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.file.set_permissions] is not set for the user's account, or if the user
+				if [field:wired.account.file.set_permissions] is not set for the user\'s account, or if the user
 				does not have applicable permissions for the directory.
 				
 				[message:wired.error] should be replied with [enum:wired.error.file_not_found]
@@ -4104,7 +4104,7 @@
 		<p7:transaction message="wired.file.create_directory" originator="client" version="2.0">
 			<p7:documentation>
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.file.create_directories] is not set for the user's account, or if the user
+				if [field:wired.account.file.create_directories] is not set for the user\'s account, or if the user
 				does not have applicable permissions for the directory.
 				
 				[message:wired.error] should be replied with [enum:wired.error.file_not_found]
@@ -4136,7 +4136,7 @@
 		<p7:transaction message="wired.file.search" originator="client" version="2.0">
 			<p7:documentation>
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.file.search_files] is not set for the user's account.
+				if [field:wired.account.file.search_files] is not set for the user\'s account.
 				
 				[message:wired.error] should be replied with [enum:wired.error.message_out_of_sequence]
 				if sent before [message:wired.client_info].
@@ -4172,7 +4172,7 @@
 		<p7:transaction message="wired.file.subscribe_directory" originator="client" version="2.0">
 			<p7:documentation>
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.file.list_files] is not set for the user's account, or if the user
+				if [field:wired.account.file.list_files] is not set for the user\'s account, or if the user
 				does not have applicable permissions for the directory.
 				
 				[message:wired.error] should be replied with [enum:wired.error.file_not_found]
@@ -4191,7 +4191,7 @@
 				[message:wired.file.directory_changed] and [message:wired.file.directory_deleted]
 				messages.
 				
-				The subscription may be silently dropped if the user's account loses the
+				The subscription may be silently dropped if the user\'s account loses the
 				[field:wired.account.file.list_files] privilege while subscribed.
 			</p7:documentation>
 			<p7:or>
@@ -4203,7 +4203,7 @@
 		<p7:transaction message="wired.file.unsubscribe_directory" originator="client" version="2.0">
 			<p7:documentation>
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.file.list_files] is not set for the user's account, or if the user
+				if [field:wired.account.file.list_files] is not set for the user\'s account, or if the user
 				does not have applicable permissions for the directory.
 				
 				[message:wired.error] should be replied with [enum:wired.error.not_subscribed]
@@ -4234,7 +4234,7 @@
 		<p7:transaction message="wired.account.change_password" originator="client" version="2.0">
 			<p7:documentation>
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.account.change_password] is not set for the user's account.
+				if [field:wired.account.account.change_password] is not set for the user\'s account.
 				
 				[message:wired.error] should be replied with [enum:wired.error.message_out_of_sequence]
 				if sent before [message:wired.client_info].
@@ -4256,7 +4256,7 @@
 		<p7:transaction message="wired.account.list_users" originator="client" version="2.0">
 			<p7:documentation>
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.account.list_accounts] is not set for the user's account.
+				if [field:wired.account.account.list_accounts] is not set for the user\'s account.
 				
 				[message:wired.error] should be replied with [enum:wired.error.message_out_of_sequence]
 				if sent before [message:wired.client_info].
@@ -4279,7 +4279,7 @@
 		<p7:transaction message="wired.account.list_groups" originator="client" version="2.0">
 			<p7:documentation>
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.account.list_accounts] is not set for the user's account.
+				if [field:wired.account.account.list_accounts] is not set for the user\'s account.
 				
 				[message:wired.error] should be replied with [enum:wired.error.message_out_of_sequence]
 				if sent before [message:wired.client_info].
@@ -4302,7 +4302,7 @@
 		<p7:transaction message="wired.account.read_user" originator="client" version="2.0">
 			<p7:documentation>
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.account.read_users] is not set for the user's account.
+				if [field:wired.account.account.read_users] is not set for the user\'s account.
 				
 				[message:wired.error] should be replied with [enum:wired.error.message_out_of_sequence]
 				if sent before [message:wired.client_info].
@@ -4324,7 +4324,7 @@
 		<p7:transaction message="wired.account.read_group" originator="client" version="2.0">
 			<p7:documentation>
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.account.read_groups] is not set for the user's account.
+				if [field:wired.account.account.read_groups] is not set for the user\'s account.
 				
 				[message:wired.error] should be replied with [enum:wired.error.message_out_of_sequence]
 				if sent before [message:wired.client_info].
@@ -4346,7 +4346,7 @@
 		<p7:transaction message="wired.account.create_user" originator="client" version="2.0">
 			<p7:documentation>
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.account.create_users] is not set for the user's account.
+				if [field:wired.account.account.create_users] is not set for the user\'s account.
 				
 				[message:wired.error] should be replied with [enum:wired.error.message_out_of_sequence]
 				if sent before [message:wired.client_info].
@@ -4371,7 +4371,7 @@
 		<p7:transaction message="wired.account.create_group" originator="client" version="2.0">
 			<p7:documentation>
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.account.create_groups] is not set for the user's account.
+				if [field:wired.account.account.create_groups] is not set for the user\'s account.
 				
 				[message:wired.error] should be replied with [enum:wired.error.message_out_of_sequence]
 				if sent before [message:wired.client_info].
@@ -4396,7 +4396,7 @@
 		<p7:transaction message="wired.account.edit_user" originator="client" version="2.0">
 			<p7:documentation>
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.account.edit_users] is not set for the user's account.
+				if [field:wired.account.account.edit_users] is not set for the user\'s account.
 				
 				[message:wired.error] should be replied with [enum:wired.error.message_out_of_sequence]
 				if sent before [message:wired.client_info].
@@ -4424,7 +4424,7 @@
 		<p7:transaction message="wired.account.edit_group" originator="client" version="2.0">
 			<p7:documentation>
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.account.edit_groups] is not set for the user's account.
+				if [field:wired.account.account.edit_groups] is not set for the user\'s account.
 				
 				[message:wired.error] should be replied with [enum:wired.error.message_out_of_sequence]
 				if sent before [message:wired.client_info].
@@ -4452,7 +4452,7 @@
 		<p7:transaction message="wired.account.delete_user" originator="client" version="2.0">
 			<p7:documentation>
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.account.delete_users] is not set for the user's account.
+				if [field:wired.account.account.delete_users] is not set for the user\'s account.
 				
 				[message:wired.error] should be replied with [enum:wired.error.message_out_of_sequence]
 				if sent before [message:wired.client_info].
@@ -4474,7 +4474,7 @@
 		<p7:transaction message="wired.account.delete_group" originator="client" version="2.0">
 			<p7:documentation>
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.account.delete_groups] is not set for the user's account.
+				if [field:wired.account.account.delete_groups] is not set for the user\'s account.
 				
 				[message:wired.error] should be replied with [enum:wired.error.message_out_of_sequence]
 				if sent before [message:wired.client_info].
@@ -4496,7 +4496,7 @@
 		<p7:transaction message="wired.account.subscribe_accounts" originator="client" version="2.0">
 			<p7:documentation>
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.account.list_accounts] is not set for the user's account.
+				if [field:wired.account.account.list_accounts] is not set for the user\'s account.
 				
 				[message:wired.error] should be replied with [enum:wired.error.message_out_of_sequence]
 				if sent before [message:wired.client_info].
@@ -4504,7 +4504,7 @@
 				Otherwise, [message:wired.okay] should be replied. After this, the user may receive
 				[message:wired.account.accounts_changed] messages.
 				
-				The subscription may be silently dropped if the user's account loses the
+				The subscription may be silently dropped if the user\'s account loses the
 				[field:wired.account.account.list_accounts] privilege while subscribed.
 			</p7:documentation>
 			<p7:or>
@@ -4516,7 +4516,7 @@
 		<p7:transaction message="wired.account.unsubscribe_accounts" originator="client" version="2.0">
 			<p7:documentation>
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.file.list_accounts] is not set for the user's account.
+				if [field:wired.account.file.list_accounts] is not set for the user\'s account.
 				
 				[message:wired.error] should be replied with [enum:wired.error.not_subscribed]
 				if the user has not previously subscribed to account changes.
@@ -4576,7 +4576,7 @@
 		<p7:transaction message="wired.log.get_log" originator="client" version="2.0">
 			<p7:documentation>
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.log.view_log] is not set for the user's account.
+				if [field:wired.account.log.view_log] is not set for the user\'s account.
 				
 				[message:wired.error] should be replied with [enum:wired.error.message_out_of_sequence]
 				if sent before [message:wired.client_info].
@@ -4596,7 +4596,7 @@
 		<p7:transaction message="wired.log.subscribe" originator="client" version="2.0">
 			<p7:documentation>
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.log.view_log] is not set for the user's account.
+				if [field:wired.account.log.view_log] is not set for the user\'s account.
 				
 				[message:wired.error] should be replied with [enum:wired.error.message_out_of_sequence]
 				if sent before [message:wired.client_info].
@@ -4604,7 +4604,7 @@
 				Otherwise, [message:wired.okay] should be replied. After this, the user may receive
 				[message:wired.log.message] messages.
 				
-				The subscription may be silently dropped if the user's account loses the
+				The subscription may be silently dropped if the user\'s account loses the
 				[field:wired.account.log.view_log] privilege while subscribed.
 			</p7:documentation>
 			<p7:or>
@@ -4616,7 +4616,7 @@
 		<p7:transaction message="wired.log.unsubscribe" originator="client" version="2.0">
 			<p7:documentation>
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.log.view_log] is not set for the user's account.
+				if [field:wired.account.log.view_log] is not set for the user\'s account.
 				
 				[message:wired.error] should be replied with [enum:wired.error.not_subscribed]
 				if the user has not previously subscribed to the log.
@@ -4636,7 +4636,7 @@
 		<p7:transaction message="wired.event.get_first_time" originator="client" version="2.0">
 			<p7:documentation>
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.events.view_events] is not set for the user's account.
+				if [field:wired.account.events.view_events] is not set for the user\'s account.
 				
 				[message:wired.error] should be replied with [enum:wired.error.message_out_of_sequence]
 				if sent before [message:wired.client_info].
@@ -4652,7 +4652,7 @@
 		<p7:transaction message="wired.event.get_events" originator="client" version="2.0">
 			<p7:documentation>
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.events.view_events] is not set for the user's account.
+				if [field:wired.account.events.view_events] is not set for the user\'s account.
 				
 				[message:wired.error] should be replied with [enum:wired.error.message_out_of_sequence]
 				if sent before [message:wired.client_info].
@@ -4682,7 +4682,7 @@
 		<p7:transaction message="wired.event.subscribe" originator="client" version="2.0">
 			<p7:documentation>
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.events.view_events] is not set for the user's account.
+				if [field:wired.account.events.view_events] is not set for the user\'s account.
 				
 				[message:wired.error] should be replied with [enum:wired.error.message_out_of_sequence]
 				if sent before [message:wired.client_info].
@@ -4690,7 +4690,7 @@
 				Otherwise, [message:wired.okay] should be replied. After this, the user may receive
 				[message:wired.event.event] and [message:wired.event.archive] messages.
 				
-				The subscription may be silently dropped if the user's account loses the
+				The subscription may be silently dropped if the user\'s account loses the
 				[field:wired.account.events.view_events] privilege while subscribed.
 			</p7:documentation>
 			<p7:or>
@@ -4702,7 +4702,7 @@
 		<p7:transaction message="wired.event.unsubscribe" originator="client" version="2.0">
 			<p7:documentation>
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.events.view_events] is not set for the user's account.
+				if [field:wired.account.events.view_events] is not set for the user\'s account.
 				
 				[message:wired.error] should be replied with [enum:wired.error.not_subscribed]
 				if the user has not previously subscribed to events.
@@ -4722,7 +4722,7 @@
 		<p7:transaction message="wired.settings.get_settings" originator="client" version="2.0">
 			<p7:documentation>
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.settings.get_settings] is not set for the user's account.
+				if [field:wired.account.settings.get_settings] is not set for the user\'s account.
 				
 				[message:wired.error] should be replied with [enum:wired.error.message_out_of_sequence]
 				if sent before [message:wired.client_info].
@@ -4738,7 +4738,7 @@
 		<p7:transaction message="wired.settings.set_settings" originator="client" version="2.0">
 			<p7:documentation>
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.settings.set_settings] is not set for the user's account.
+				if [field:wired.account.settings.set_settings] is not set for the user\'s account.
 				
 				[message:wired.error] should be replied with [enum:wired.error.message_out_of_sequence]
 				if sent before [message:wired.client_info].
@@ -4760,7 +4760,7 @@
 		<p7:transaction message="wired.banlist.get_bans" originator="client" version="2.0">
 			<p7:documentation>
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.banlist.get_bans] is not set for the user's account.
+				if [field:wired.account.banlist.get_bans] is not set for the user\'s account.
 				
 				[message:wired.error] should be replied with [enum:wired.error.message_out_of_sequence]
 				if sent before [message:wired.client_info].
@@ -4780,7 +4780,7 @@
 		<p7:transaction message="wired.banlist.add_ban" originator="client" version="2.0">
 			<p7:documentation>
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.banlist.add_bans] is not set for the user's account.
+				if [field:wired.account.banlist.add_bans] is not set for the user\'s account.
 				
 				[message:wired.error] should be replied with [enum:wired.error.ban_exists] if the ban
 				already exists.
@@ -4805,7 +4805,7 @@
 		<p7:transaction message="wired.banlist.delete_ban" originator="client" version="2.0">
 			<p7:documentation>
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.banlist.delete_bans] is not set for the user's account.
+				if [field:wired.account.banlist.delete_bans] is not set for the user\'s account.
 				
 				[message:wired.error] should be replied with [enum:wired.error.ban_not_found] if the ban
 				does not exist.
@@ -4833,7 +4833,7 @@
 				if the server is not configured to be a tracker.
 
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.tracker.list_servers] is not set for the user's account.
+				if [field:wired.account.tracker.list_servers] is not set for the user\'s account.
 				
 				[message:wired.error] should be replied with [enum:wired.error.message_out_of_sequence]
 				if sent before [message:wired.client_info].
@@ -4852,7 +4852,7 @@
 				if the server is not configured to be a tracker.
 
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.tracker.list_servers] is not set for the user's account.
+				if [field:wired.account.tracker.list_servers] is not set for the user\'s account.
 				
 				[message:wired.error] should be replied with [enum:wired.error.message_out_of_sequence]
 				if sent before [message:wired.client_info].
@@ -4875,7 +4875,7 @@
 				if the server is not configured to be a tracker.
 
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.tracker.register_servers] is not set for the user's account.
+				if [field:wired.account.tracker.register_servers] is not set for the user\'s account.
 				
 				[message:wired.error] should be replied with [enum:wired.error.message_out_of_sequence]
 				if sent before [message:wired.client_info].
@@ -4900,7 +4900,7 @@
 				if the server has not previously been registered.
 				
 				[message:wired.error] should be replied with [enum:wired.error.permission_denied]
-				if [field:wired.account.tracker.register_servers] is not set for the user's account.
+				if [field:wired.account.tracker.register_servers] is not set for the user\'s account.
 				
 				[message:wired.error] should be replied with [enum:wired.error.message_out_of_sequence]
 				if sent before [message:wired.client_info].
@@ -5089,3 +5089,4 @@
         
 	</p7:broadcasts>
 </p7:protocol>
+'

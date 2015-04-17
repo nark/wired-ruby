@@ -1,0 +1,140 @@
+#!/usr/bin/env ruby
+
+require 'curses'
+require "./lib/wired"
+require 'thor'
+
+
+
+
+
+class Window
+  include Curses
+
+  def initialize(client)
+    @client = client
+    @messages = []
+  end
+
+  def start
+    init_screen
+    start_color
+    init_pair(COLOR_WHITE, COLOR_BLACK, COLOR_WHITE)
+    use_default_colors
+    redraw
+
+    loop do
+      capture_input
+    end
+  end
+
+  def print_message(message)
+    @messages << message
+    redraw
+  end
+
+  private
+
+  def capture_input
+    content = getstr
+
+    if content.length > 0
+    	message = Wired::Message.new(:name => "wired.chat.send_say", :spec => @client.spec)
+    	message.add_parameter("wired.chat.id", 1)
+    	message.add_parameter("wired.chat.say", content)
+
+      @client.send_message(message)
+    end
+  end
+
+  def redraw
+    draw_text_field
+    draw_messages
+    cursor_to_input_line
+    refresh
+  end
+
+  def draw_text_field
+    setpos(divider_line, 0)
+    attron(color_pair(COLOR_WHITE) | A_NORMAL) do
+      addstr("#" * cols)
+    end
+
+    cursor_to_input_line
+    clrtoeol
+  end
+
+  def draw_messages
+    @messages.last(window_line_size).inject(0) do |line_number, message|
+      setpos(line_number, 0)
+      clrtoeol
+      addstr(message)
+      line_number + 1
+    end
+  end
+
+  def input_line
+    lines - 1
+  end
+
+  def divider_line
+    lines - 2
+  end
+
+  def window_line_size
+    lines - 2
+  end
+
+  def cursor_to_input_line
+    setpos(input_line, 0)
+  end
+end
+
+
+
+
+
+class RWire < Thor
+  desc "connect <hostname:port> <username> <password>", "Connect to a Wired 2.0 server"
+  long_desc <<-LONGDESC
+    RWire is a lightweight Wired 2.0 client written in Ruby.
+
+    With --nick option, you can specify your user nickname in the public chat.
+
+    With --status option, you can specify your user status in the public chat.
+
+    Copyright © 2015, Rafaël Warnault <rw@read-write.fr>. All rights reserved.
+  LONGDESC
+
+
+  option :nick, :type => :string, :default => "RWire Client", :banner => "<nick>"
+  option :status, :type => :string, :default => "Red Ruby", :banner => "<status>"
+
+
+  def connect(hostname, login="guest", password="")
+  	# Set debug level
+		Wired::Log.level = :info
+
+		# Create a Wired Spec object based on "wired.xml" file
+		spec = Wired::Spec.new
+
+		# Create a Wired Url object pointing to "localhost"
+		url = Wired::Url.new "wired://admin@localhost"
+
+		# Create a Client object against the specification
+		client = Wired::Client.new spec 
+
+		# Handle interupt properly
+		#Kernel.trap("INT") { client.disconnect }
+
+		# create the window
+		window = Window.new(client)
+
+		# Connect the client to the url
+		exit 0 unless client.connect url, window		
+
+    window.start
+  end
+end
+
+RWire.start(ARGV)
