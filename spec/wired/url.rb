@@ -11,29 +11,29 @@ module Wired
 		context "::new" do
 			it "should create an empty Wired URL object" do
 				url 						= Wired::Url.new(nil)
-				url.should_not 				be_nil
+				expect(url).not_to be		nil
 			end
 
 			it "should create a Wired URL object from a complete base string" do
-				url 						= Wired::Url.new(@base)
+				url 							= Wired::Url.new(@base)
 
-				url.should_not 				be_nil
-				url.scheme.should_not 		be_nil
-				url.login.should_not 		be_nil
-				url.password.should_not 	be_nil
-				url.hostname.should_not 	be_nil
-				url.port.should_not 		be_nil
+				expect(url).not_to be			nil
+				expect(url.scheme).not_to be 	nil
+				expect(url.login).not_to be 	nil
+				expect(url.password).not_to be 	nil
+				expect(url.hostname).not_to be 	nil
+				expect(url.port).not_to be 		nil
 			end
 
 			it "should create a Wired URL object from an incomplete base string" do
 				url 						= Wired::Url.new(@base2)
 
-				url.should_not 				be_nil
-				url.scheme.should_not 		be_nil
-				url.login.should_not 		be_nil
-				url.password.should 		be_nil
-				url.hostname.should_not 	be_nil
-				url.port.should_not 		be_nil
+				expect(url).not_to be			nil
+				expect(url.scheme).not_to be	nil
+				expect(url.login).not_to be		nil
+				expect(url.password).not_to be	nil
+				expect(url.hostname).not_to be 	nil
+				expect(url.port).not_to be		nil
 			end
 		end
 
@@ -44,24 +44,23 @@ module Wired
 				url.password 				= "passw0rd"
 				url.port					= 4875
 
-				url.should_not 				be_nil
-				url.scheme.should_not 		be_nil
-				url.login.should_not 		be_nil
-				url.password.should_not 	be_nil
-				url.hostname.should_not 	be_nil
-				url.port.should_not 		be_nil	
+				expect(url).not_to be 				nil
+				expect(url.scheme).not_to be 		nil
+				expect(url.login).not_to be 		nil
+				expect(url.password).not_to be		""
+				expect(url.hostname).not_to be 		nil
+				expect(url.port).not_to be 			nil	
 			end
 		end
 
 
 		context "::print" do
 			it "should print a string representattion of a Wired URI" do
-				url 						= Wired::Url.new(@base)
+				url 								= Wired::Url.new(@base)
 
-				url.should_not 				be_nil
-
-				url.to_s.should_not			be_nil
-				url.to_s.class.should 		eql String
+				expect(url).not_to be				nil
+				expect(url.to_s).not_to be			nil
+				expect(url.to_s).to be_instance_of	String
 
 				puts "Wired URL as string: " + url.to_s
 			end

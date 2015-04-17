@@ -12,17 +12,17 @@ module Wired
 			it "should create an empty Wired Specification object" do
 				spec = Wired::Spec.new(nil)
 
-				spec.should_not				be_nil
-				spec.builtindoc.should_not	be_nil
+				expect(spec).not_to be				nil
+				expect(spec.builtindoc).not_to be	nil
 			end
 
 			it "should create a Wired Specification object for Wired 2.0 protocol" do
 				spec = Wired::Spec.new(@spec_path)
 
-				spec.should_not				be_nil
-				spec.path.should_not		be_nil
-				spec.doc.should_not			be_nil
-				spec.builtindoc.should_not	be_nil
+				expect(spec).not_to be				nil
+				expect(spec.path).not_to be			nil
+				expect(spec.doc).not_to be			nil
+				expect(spec.builtindoc).not_to be	nil
 			end
 		end
 	end
