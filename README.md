@@ -44,7 +44,7 @@ See `wired.gemspec` files for more details.
 		
 3. Build the gem:
 
-		gem build wired.gemspec-0.0.2.gem
+		gem build wired.gemspec
 		
 4. Install the gem:
 
