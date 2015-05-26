@@ -11,6 +11,7 @@ module Wired
 		attr_accessor	:icon
 		attr_accessor	:socket
 		attr_accessor :server
+		attr_accessor :topic
 
 		attr_accessor	:connected_block
 		attr_accessor	:receive_block
@@ -120,6 +121,8 @@ module Wired
 					wired_chat_say_or_me message
 				when "wired.chat.me"
 					wired_chat_say_or_me message
+				when "wired.chat.topic"
+					wired_chat_topic message
 			end
 		end
 
@@ -198,6 +201,19 @@ module Wired
 
 
 
+		def wired_chat_topic(message)
+			has_topic = (@topic == nil) ? false : true
+
+			@topic = Wired::Topic.new(message) if message
+			now 		= DateTime.now.strftime("%Y/%m/%d %H:%M")
+
+			if has_topic
+				listeners_print "#{now} << #{@topic.nick} changed topic to #{@topic.topic} >>"
+			else
+				listeners_print "Server Topic : #{@topic.topic} by #{@topic.nick}"
+			end
+		end
+
 
 
 
@@ -209,6 +225,17 @@ module Wired
 		    end
 		  end
 		  @listening = true
+		end
+
+
+
+		def ping
+		  Thread.new do
+		    loop do
+		    	send_message Wired::Message.new(:spec => @spec, :name => "wired.send_ping")
+					sleep 30 
+		    end
+		  end
 		end
 
 

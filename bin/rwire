@@ -39,12 +39,39 @@ class Window
     content = getstr
 
     if content.length > 0
-    	message = Wired::Message.new(:name => "wired.chat.send_say", :spec => @client.spec)
-    	message.add_parameter("wired.chat.id", 1)
-    	message.add_parameter("wired.chat.say", content)
-
-      @client.send_message(message)
+    	message = parse_input(content)
+      @client.send_message(message) if message
+      redraw
     end
+  end
+
+  def parse_input(string)
+  	message = nil
+
+  	if string[0] == "/"
+  		reststring = string.split(' ')[1..-1].join(' ')
+
+  		if string.start_with? "/help"
+
+
+  		elsif string.start_with? "/me"
+  			message = Wired::Message.new(:name => "wired.chat.send_me", :spec => @client.spec)
+				message.add_parameter("wired.chat.id", 1)
+				message.add_parameter("wired.chat.me", reststring)
+
+  		elsif string.start_with? "/topic"
+  			message = Wired::Message.new(:name => "wired.chat.set_topic", :spec => @client.spec)
+				message.add_parameter("wired.chat.id", 1)
+				message.add_parameter("wired.chat.topic.topic", reststring)
+
+  		end
+  	else
+  		message = Wired::Message.new(:name => "wired.chat.send_say", :spec => @client.spec)
+			message.add_parameter("wired.chat.id", 1)
+			message.add_parameter("wired.chat.say", string)
+  	end
+
+		return message
   end
 
   def redraw
@@ -112,8 +139,10 @@ class RWire < Thor
 
 
   def connect(hostname, login="guest", password="")
-  	# Set debug level
-		Wired::Log.level = :info
+  	# Logging setup (remove stdout and add rwire.log file)
+  	Wired::Log.remove_appenders Logging.appenders.stdout
+  	Wired::Log.add_appenders Logging.appenders.file('log/rwire.log')
+		Wired::Log.level = :debug
 
 		# Create a Wired Spec object based on "wired.xml" file
 		spec = Wired::Spec.new
@@ -133,7 +162,14 @@ class RWire < Thor
 		# Connect the client to the url
 		exit 0 unless client.connect url, window		
 
-    window.start
+    begin
+      window.start
+    rescue Interrupt
+      client.disconnect
+      warn "\nYou have been disconnected from #{client.server.name}"
+      exit 1
+    end
+
   end
 end
 

@@ -106,6 +106,7 @@ module Wired
 
 		# @return [Boolean] Compression enabled internally
 		attr_reader :compression_enabled
+		attr_reader :compression_configured
 
 		# @return [Boolean] Encryption enabled internally
 		attr_reader :encryption_enabled
@@ -181,7 +182,7 @@ module Wired
 			end
 
 			# create a new socket for connection
-			@socket  	= Socket::Socket.new(:INET, :STREAM)
+			@socket  		= Socket::Socket.new(:INET, :STREAM)
 			remote_addr = Socket::Socket.pack_sockaddr_in(@port, @hostname)
 
 			@socket.set_encoding("ASCII-8BIT")
@@ -206,6 +207,11 @@ module Wired
 					Wired::Log.error "Handshake failed to #{@hostname}:#{@port}" 
 					return false 
 				end
+
+				# configure compression
+				@compression_enabled = true if @compression_configured
+
+				# configure checksum
 
 				# perform the Wired key exange
 				if !connect_key_exange(nil, nil)
@@ -275,16 +281,16 @@ module Wired
 
   					if binary.length > 0
 	  					# decompress data
-						if @compression_enabled
-							binary = inflate_data(binary) 
-						end
+							if @compression_enabled
+								binary = inflate_data(binary) 
+							end
 
-						# decrypt data
-						if @encryption_enabled
-							binary = @ssl_cipher.decrypt(binary)
-						end
+							# decrypt data
+							if @encryption_enabled
+								binary = @ssl_cipher.decrypt(binary)
+							end
 
-						# create message with binary data
+							# create message with binary data
 	  					message = Wired::Message.new(:spec => @spec, :binary => binary)
 
   						# internally handle the message (logging, errors, etc.)
@@ -428,7 +434,7 @@ module Wired
 			# get socket options
 			if(@serialization == Wired::Socket::Serialization::BINARY)
 				if(message.parameter("p7.handshake.compression") == 0)
-					@compression_enabled = true
+					@compression_configured = true
 				end
 
 				if(message.parameter("p7.handshake.encryption") != nil)
@@ -436,7 +442,7 @@ module Wired
 				end
 			end
 
-			puts "@compression_enabled : #{@compression_enabled}"
+			puts "@compression_configured : #{@compression_configured}"
 
 			if(message.parameter("p7.handshake.compatibility_check") == false)
 				@remote_compatibility_check = false 
@@ -579,8 +585,6 @@ module Wired
 
 
 		def handle_message(message) 
-			return if !message
-
 			Wired::Log.debug "Received Message: " + message.name
 			handle_error message if message.name == "wired.error"
 		end
@@ -590,7 +594,7 @@ module Wired
 
 	    def handle_error(message)
 	    	Wired::Log.error "Wired Error: " + message.to_s
-			@errors.push message
+				@errors.push message
 	    end
 
 
@@ -630,7 +634,35 @@ module Wired
 
 
 		def inflate_data(data)
-		  #return Zlib::Inflate.inflate(data, Zlib::DEFAULT_COMPRESSION)		  
+			puts "inflate_data"
+			puts "compressed_data : "+ data.unpack("H*").to_s
+
+			bytes									= nil
+			c_stream 							= Z_stream.new
+			c_stream.data_type 		= Z_UNKNOWN
+
+			data 									= Bytef.new(data)
+			data_length 					= data.length
+
+			(2..16).step(1) do |multiple|
+				compressed_length 	= data_length * (1 << multiple);
+				compressed_data 		= Bytef.new(0.chr * compressed_length)
+
+				c_stream.next_in  	= data
+		    c_stream.avail_in 	= data.length
+		    c_stream.next_out 	= compressed_data
+		    c_stream.avail_out 	= compressed_length
+
+		    err 		= inflate(c_stream, Z_FINISH)
+		    bytes   = compressed_data.buffer
+		    errend 	= deflateEnd(c_stream)
+
+		    puts "data : "+ bytes.unpack("H*").to_s
+
+		    break if err == Z_STREAM_END and enderr != Z_BUF_ERROR
+			end
+
+		  return bytes
 		end
 
 
