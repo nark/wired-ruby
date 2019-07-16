@@ -44,6 +44,16 @@ module Wired
 
 
 
+		class Data < BinData::Primitive
+		  uint8  :len,  :value => lambda { data.length }
+		  string :data, :read_length => :len
+
+		  def get;   self.data; end
+		  def set(v) self.data = v; end
+		end
+
+
+
 		class TypeChoice < BinData::Choice
 			bit1 		1,  :read_length => 1 #boolean (1)
 			int32be 	2,	:read_length => 4 #enum (4)
@@ -94,7 +104,7 @@ module Wired
 			attr_accessor 	:spec
 
 			int32be :message_id
-			array :fields, :type => :field_array, :read_until => :eof
+			array :message_fields, :type => :field_array, :read_until => :eof
 		end
 
 
@@ -213,7 +223,7 @@ module Wired
 			message_data = MessageData.new
 			message_data.message_id = @id.to_i
 			message_data.spec = @spec
-			message_data.fields = Array.new
+			message_data.message_fields = Array.new
 
 			@parameters.each do |name, value|
 				
@@ -242,7 +252,7 @@ module Wired
 				type_choice.value = value
 				data_field.data = type_choice
 
-				message_data.fields.push data_field
+				message_data.message_fields.push data_field
 			end
 
 
@@ -271,13 +281,14 @@ module Wired
 				return load_message_for_binary(@binary)
 
 			elsif !@spec_message && @id
-				@spec_message 	= @spec.spec_message_with_id(@id)
-				@name 			= @spec_message.name
+				@spec_message = @spec.spec_message_with_id(@id)
+				@name 				= @spec_message.name
 
 			elsif !@spec_message && @name
-				@spec_message 	= @spec.spec_message_with_name(@name)
-				@id 			= @spec_message.id
+				@spec_message = @spec.spec_message_with_name(@name)
+				@id 					= @spec_message.id
 			end
+
 			return true
 		end
 
@@ -325,7 +336,7 @@ module Wired
 				return false
 			end
 
-			message_data.fields.each do |field|
+			message_data.message_fields.each do |field|
 				@spec_field = @spec.spec_field_with_id(field.field_id.to_s)
 				add_parameter(@spec_field.name, field.data)
 			end

@@ -550,7 +550,7 @@ module Wired
 
 							if (subname != nil)
 								field = @fields_by_name[subname]
-								field = DeepClone.clone(field)
+								field = field.dup
 
 								field.required = (subnode["use"] == "required")
 
@@ -562,7 +562,7 @@ module Wired
 
 							collection.fields.each do |field_name|
 								field = @fields_by_name[field_name]
-								field = DeepClone.clone(field)
+								field = field.dup
 
 								field.required = (subnode["use"] == "required")
 

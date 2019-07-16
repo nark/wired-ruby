@@ -1,7 +1,6 @@
 #!/usr/bin/env ruby
-
 require 'curses'
-require "./lib/wired"
+require './lib/wired'
 require 'thor'
 
 
@@ -64,6 +63,18 @@ class Window
 				message.add_parameter("wired.chat.id", 1)
 				message.add_parameter("wired.chat.topic.topic", reststring)
 
+      elsif string.start_with? "/nick"
+        @client.nick = reststring
+        @client.set_nick
+
+      elsif string.start_with? "/status"
+        @client.status = reststring
+        @client.set_status
+
+      elsif string.start_with? "/icon"
+        @client.icon = reststring
+        @client.set_icon
+        
   		end
   	else
   		message = Wired::Message.new(:name => "wired.chat.send_say", :spec => @client.spec)
@@ -84,7 +95,7 @@ class Window
   def draw_text_field
     setpos(divider_line, 0)
     attron(color_pair(COLOR_WHITE) | A_NORMAL) do
-      addstr("#" * cols)
+      addstr("_" * cols)
     end
 
     cursor_to_input_line
@@ -122,23 +133,26 @@ end
 
 
 class RWire < Thor
-  desc "connect <hostname:port> <username> <password>", "Connect to a Wired 2.0 server"
+  desc "connect <hostname> [OPTIONS]", "Connect to a Wired 2.0 server"
   long_desc <<-LONGDESC
     RWire is a lightweight Wired 2.0 client written in Ruby.
-
-    With --nick option, you can specify your user nickname in the public chat.
-
-    With --status option, you can specify your user status in the public chat.
 
     Copyright © 2015, Rafaël Warnault <rw@read-write.fr>. All rights reserved.
   LONGDESC
 
 
-  option :nick, :type => :string, :default => "RWire Client", :banner => "<nick>"
-  option :status, :type => :string, :default => "Red Ruby", :banner => "<status>"
+  method_option :login,     :aliases => "-l", :type => :string, :desc => "User login", :banner => "<login>", :default => "guest"
+  method_option :password,  :aliases => "-p", :type => :string, :desc => "User password", :banner => "<password>"
+  method_option :port,      :aliases => "-P", :type => :string, :desc => "Server port", :banner => "<port>", :default => "4871"
+  method_option :nick,      :aliases => "-n", :type => :string, :desc => "User nickname", :banner => "<nick>", :default => "RWire Client"
+  method_option :status,    :aliases => "-s", :type => :string, :desc => "User status", :banner => "<status>"
+  method_option :icon,      :aliases => "-i", :type => :string, :desc => "User icon", :banner => "/path/to/image"
 
+  def connect(hostname)
+    login     = options[:login]    || "guest"
+    password  = options[:password] || ""
+    port      = options[:port]     || "4871"
 
-  def connect(hostname, login="guest", password="")
   	# Logging setup (remove stdout and add rwire.log file)
   	Wired::Log.remove_appenders Logging.appenders.stdout
   	Wired::Log.add_appenders Logging.appenders.file('log/rwire.log')
@@ -148,10 +162,10 @@ class RWire < Thor
 		spec = Wired::Spec.new
 
 		# Create a Wired Url object pointing to "localhost"
-		url = Wired::Url.new "wired://admin@localhost"
+		url = Wired::Url.new "wired://#{login}:#{password}@#{hostname}:#{port}"
 
 		# Create a Client object against the specification
-		client = Wired::Client.new spec 
+		client = Wired::Client.new(spec, options)
 
 		# Handle interupt properly
 		#Kernel.trap("INT") { client.disconnect }
@@ -164,7 +178,7 @@ class RWire < Thor
 
     begin
       window.start
-    rescue Interrupt
+    rescue Interrupt => e
       client.disconnect
       warn "\nYou have been disconnected from #{client.server.name}"
       exit 1

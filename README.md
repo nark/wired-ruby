@@ -88,6 +88,10 @@ And run:
 
 Have a look to `bin/rwire` code, rspec test cases and the source code for more examples.
 
+## RWire example
+
+	bin/rwire connect example.org:4875 -l admin -p ********
+
 ## Contribute
 
 Of course, every contributions are welcome, do not hesitate to commit pull-requests.

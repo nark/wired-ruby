@@ -95,7 +95,7 @@ module Wired
 		attr_accessor :cipher
 
 		# @return [OpenSSL::Cipher::Cipher] OpenSSL Cipher object
-		attr_reader :ssl_cipher
+		attr_reader 	:ssl_cipher
 
 		# @return [Integer] Connect timeout
 		attr_accessor :timeout
@@ -105,23 +105,23 @@ module Wired
 
 
 		# @return [Boolean] Compression enabled internally
-		attr_reader :compression_enabled
-		attr_reader :compression_configured
+		attr_reader 	:compression_enabled
+		attr_reader 	:compression_configured
 
 		# @return [Boolean] Encryption enabled internally
-		attr_reader :encryption_enabled
+		attr_reader 	:encryption_enabled
 
 		# @return [Boolean] Local compatibility check
-		attr_reader :local_compatibility_check
+		attr_reader 	:local_compatibility_check
 
 		# @return [Boolean] Remote compatibility check
-		attr_reader :remote_compatibility_check
+		attr_reader 	:remote_compatibility_check
 
 		# @return [String] The version of the remote protocol, retrieved during handshake
-		attr_reader :remote_version
+		attr_reader 	:remote_version
 
 		# @return [String] The name of the remote protocol, retrieved during handshake
-		attr_reader :remote_name
+		attr_reader 	:remote_name
 
 		# @return [Boolean] Socket is connected (mainly used to handle disconnect)
 		attr_accessor :connected
@@ -141,19 +141,19 @@ module Wired
 		#
 		# @return [Wired::Socket] A Spec instance
 		def initialize(hostname, spec, options = {})
-			@errors				= Array.new
-			@hostname 			= hostname
-     	 	@spec				= spec
-     	 	@socket 			= nil
+				@errors					= Array.new
+				@hostname 			= hostname
+     	 	@spec						= spec
+     	 	@socket 				= nil
      	 	@tls_socket			= nil
 
-     	 	@port 				= options[:port] || 4875
-     	 	@timeout 			= options[:timeout] || 10.0
+     	 	@port 					= options[:port] || 4871
+     	 	@timeout 				= options[:timeout] || 10.0
      	 	@username 			= options[:username] || "guest"
      	 	@password 			= options[:password] || ""
-     	 	@serialization 		= options[:serialization] || Wired::Socket::Serialization::BINARY
+     	 	@serialization 	= options[:serialization] || Wired::Socket::Serialization::BINARY
      	 	@compression 		= options[:compression] || Wired::Socket::Compression::NONE
-     	 	@cipher				= options[:cipher] || Wired::Socket::Cipher::RSA_AES_256
+     	 	@cipher					= options[:cipher] || Wired::Socket::Cipher::RSA_AES_256
 
      	 	@private_key		= nil
      	 	@public_key 		= nil
@@ -197,6 +197,8 @@ module Wired
 				  raise Timeout::Error
 				  Wired::Log.error "Connection timeout to #{@hostname}:#{@port}" and return false
 				end
+			rescue => e
+				Wired::Log.error "#{e}" if e and return false
 			end
 
 			@connected = true
@@ -247,7 +249,7 @@ module Wired
 			if(@serialization == Wired::Socket::Serialization::XML)
 				message = ""
 				# read XML data line by line to compute a message
-				while line = @socket.gets
+				while !(@socket.closed?) && (line = @socket.gets)
 					return nil if !@connected
 					break if line == "\r\n"
 					message = message + line
@@ -264,12 +266,9 @@ module Wired
 
 			elsif(@serialization == Wired::Socket::Serialization::BINARY)
 				begin
-					# read message length
 					begin
+						# read message length
 						length = @socket.readpartial(SOCKET_LENGTH_SIZE).unpack("N")[0]
-					rescue Exception => e
-						return nil
-					end
 
   					if(length <= 0 || length > SOCKET_MAX_BINARY_SIZE)
   						Wired::Log.error "Invalid message length: " + length.to_s
@@ -296,12 +295,16 @@ module Wired
   						# internally handle the message (logging, errors, etc.)
 	  					handle_message message
 
-						return message
+							return message
 	  				end
-				rescue Errno::EAGAIN
-					IO.select([@socket])
-					retry 
-				rescue EOFError
+					rescue Errno::EAGAIN
+						IO.select([@socket])
+						retry 
+					rescue EOFError => e
+						Wired::Log.error "#{e}" if e and return nil
+					rescue => e
+						Wired::Log.error "#{e}" if e and return nil
+					end
 				end
 				# internally handle the message (logging, errors, etc.)
 				handle_message message
@@ -432,17 +435,17 @@ module Wired
 			@local_compatibility_check = !@spec.is_compatible_with_protocol(@remote_name, @remote_version)
 
 			# get socket options
-			if(@serialization == Wired::Socket::Serialization::BINARY)
-				if(message.parameter("p7.handshake.compression") == 0)
-					@compression_configured = true
-				end
+			# if(@serialization == Wired::Socket::Serialization::BINARY)
+			# 	if(message.parameter("p7.handshake.compression") == 0)
+			# 		@compression_configured = true
+			# 	end
 
-				if(message.parameter("p7.handshake.encryption") != nil)
-					@cipher = message.parameter("p7.handshake.encryption").to_i
-				end
-			end
+			# 	if(message.parameter("p7.handshake.encryption") != nil)
+			# 		@cipher = message.parameter("p7.handshake.encryption").to_i
+			# 	end
+			# end
 
-			puts "@compression_configured : #{@compression_configured}"
+			# puts "@compression_configured : #{@compression_configured}"
 
 			if(message.parameter("p7.handshake.compatibility_check") == false)
 				@remote_compatibility_check = false 
@@ -634,35 +637,48 @@ module Wired
 
 
 		def inflate_data(data)
-			puts "inflate_data"
-			puts "compressed_data : "+ data.unpack("H*").to_s
+			c_stream 					= Z_stream.new
 
-			bytes									= nil
-			c_stream 							= Z_stream.new
-			c_stream.data_type 		= Z_UNKNOWN
+			data_length 			= data.length
 
-			data 									= Bytef.new(data)
-			data_length 					= data.length
+			c_stream.next_in  = Bytef.new(data_length)
+    	c_stream.avail_in = 0
+    	c_stream.next_out = Bytef.new(data_length)
 
-			(2..16).step(1) do |multiple|
-				compressed_length 	= data_length * (1 << multiple);
-				compressed_data 		= Bytef.new(0.chr * compressed_length)
+    	err = inflateInit(c_stream)
+    	#CHECK_ERR(err, "inflateInit")
 
-				c_stream.next_in  	= data
-		    c_stream.avail_in 	= data.length
-		    c_stream.next_out 	= compressed_data
-		    c_stream.avail_out 	= compressed_length
+			# puts "inflate_data"
+			# puts "compressed_data : "+ data.unpack("H*").to_s
 
-		    err 		= inflate(c_stream, Z_FINISH)
-		    bytes   = compressed_data.buffer
-		    errend 	= deflateEnd(c_stream)
+			# bytes									= nil
+			# c_stream 							= Z_stream.new
+			# c_stream.data_type 		= Z_UNKNOWN
 
-		    puts "data : "+ bytes.unpack("H*").to_s
+			# data 									= Bytef.new(data)
+			# data_length 					= data.length
 
-		    break if err == Z_STREAM_END and enderr != Z_BUF_ERROR
-			end
+			# (2..16).step(1) do |multiple|
+			# 	puts "multiple : #{multiple}"
 
-		  return bytes
+			# 	compressed_length 	= data_length * (1 << multiple);
+			# 	compressed_data 		= Bytef.new(0.chr * compressed_length)
+
+			# 	puts "compressed_length : #{compressed_length}"
+
+			# 	c_stream.next_in  	= data
+		 #    c_stream.avail_in 	= data.length
+		 #    c_stream.next_out 	= compressed_data
+		 #    c_stream.avail_out 	= compressed_length
+
+		 #    err 		= inflate(c_stream, Z_FINISH)
+		 #    bytes   = compressed_data.buffer
+		 #    errend 	= deflateEnd(c_stream)
+
+		 #    break if err == Z_STREAM_END and enderr != Z_BUF_ERROR
+			# end
+
+		 #  return bytes
 		end
 
 

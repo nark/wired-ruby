@@ -23,6 +23,7 @@ module Wired
 			@spec				= spec
 			@nick 			= options[:nick]  	|| "Ruby Wired Client"
 			@status			= options[:status]  || "Ruby version " + RUBY_VERSION
+			@icon				= options[:icon] 		|| nil
 			@options 		= options
 			@listeners  = []
 			@users 			= []
@@ -45,7 +46,7 @@ module Wired
 
 			@socket = Wired::Socket.new(@url.hostname, @spec, options)
 			if @socket.connect
-				if client_info and login
+				if client_info and set_user and login
 					if listener
 						@listeners << listener
 						listen
@@ -95,8 +96,40 @@ module Wired
 
 
 
-		def destroy
+		def set_nick
+			message = Wired::Message.new(:spec => @spec, :name => "wired.user.set_nick")
+			message.add_parameter("wired.user.nick", @nick)
 
+			send_message message
+			message = @socket.read
+		end
+
+
+		def set_status
+			message = Wired::Message.new(:spec => @spec, :name => "wired.user.set_status")
+			message.add_parameter("wired.user.status", @status)
+
+			send_message message
+			message = @socket.read
+		end
+
+
+		def set_icon
+			new_icon = nil
+
+			if @icon != nil 
+				new_icon = Wired::Icon.new path: options[:icon] 
+			else
+				new_icon = Wired::Icon.new string: $default_icon
+			end
+
+			Wired::Log.info new_icon.string
+
+			message = Wired::Message.new(:spec => @spec, :name => "wired.user.set_icon")
+			message.add_parameter("wired.user.icon", new_icon.to_bin)
+
+			send_message message
+			message = @socket.read
 		end
 
 
@@ -256,16 +289,19 @@ module Wired
 			message = Wired::Message.new(:spec => @spec, :name => "wired.client_info")
 
 			message.add_parameters({
-					"wired.info.application.name" 		=> "Wired Ruby",
-					"wired.info.application.version" 	=> "0.1",
-					"wired.info.application.build" 		=> "0",
-					"wired.info.os.name" 							=> "OSX",
-					"wired.info.os.version" 					=> "10.8",
-					"wired.info.arch" 								=> "x86_64",
-					"wired.info.supports_rsrc" 				=> "false"
-				})
+				"wired.info.application.name" 		=> "Wired Ruby",
+				"wired.info.application.version"  => "0.1",
+				"wired.info.application.build" 		=> "1",
+				"wired.info.os.name" 							=> "macOS",
+				"wired.info.os.version" 					=> "10.8",
+				"wired.info.arch" 								=> "x86_64",
+				"wired.info.supports_rsrc" 				=> "false"
+			})
 
-			send_message message
+			send_message message		
+
+			sleep 1
+
 			message = @socket.read
 
 			@server = Wired::Server.new message if message
@@ -275,6 +311,8 @@ module Wired
 
 
 		def login
+			puts "login"
+
 			message = Wired::Message.new(:spec => @spec, :name => "wired.send_login")
 
 			if @url.login && @url.login.size > 0
@@ -291,6 +329,15 @@ module Wired
 
 			send_message message
 			message = @socket.read
+		end
+
+
+		def set_user
+			puts "set_user"
+
+			set_nick
+			set_status
+			set_icon
 		end
 	end
 end

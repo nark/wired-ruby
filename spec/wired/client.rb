@@ -5,8 +5,8 @@ module Wired
 
 		before :each do
 			@spec 	= Wired::Spec.new
-			@url 	= Wired::Url.new("wired://localhost")
-			@nick	= "Nark"
+			@url 	  = Wired::Url.new("wired://localhost")
+			@nick	  = "Nark"
 			@status = "Testing"
 		end
 
@@ -27,7 +27,7 @@ module Wired
 			it "should connect Wired Client object to localhost server" do
 				client = Wired::Client.new(
 					@spec, 
-					:login 			=> "guest",
+					:login 				=> "guest",
 					:password 		=> "",
 					:encryption 	=> Wired::Socket::Cipher::NONE)
 
@@ -40,7 +40,7 @@ module Wired
 			it "should connect Wired Client object to localhost server" do
 				client = Wired::Client.new(
 					@spec, 
-					:login 			=> "guest",
+					:login 				=> "guest",
 					:password 		=> "",
 					:encryption 	=> Wired::Socket::Cipher::RSA_AES_256)
 
@@ -52,9 +52,9 @@ module Wired
 			it "should connect Wired Client object to localhost server" do
 				client = Wired::Client.new(
 					@spec, 
-					:login 			=> "guest",
+					:login 				=> "guest",
 					:password 		=> "",
-					:compression => Wired::Socket::Compression::DEFLATE)
+					:compression 	=> Wired::Socket::Compression::DEFLATE)
 
 				expect(client.connect(@url)).to be_truthy
 			end

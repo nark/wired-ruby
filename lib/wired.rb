@@ -1,5 +1,6 @@
 require_relative 'wired/cipher'
 require_relative 'wired/client'
+require_relative 'wired/icon'
 require_relative 'wired/logger'
 require_relative 'wired/message'
 require_relative 'wired/server'
