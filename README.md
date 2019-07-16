@@ -13,6 +13,7 @@ Wired-Ruby is a light programming library that implements the Wired 2.0 protocol
 
 ### To-implement features
 
+* Server-side protocol
 * Data compression using deflate algorithm
 * Message checksum using sha algorithm
 * Out-of-band data communication for file transfers
@@ -71,26 +72,47 @@ And run:
 	url = Wired::Url.new "wired://localhost"
 	
 	# Create a Client object against the specification
-	client = Wired::Client.new(spec)
+	client = Wired::Client.new spec
 	
 	# Connect the client to the url
 	exit if !client.connect url
 	
-	# Create a "wired.chat.say" to post in the public chat	message = Wired::Message.new(:name => "wired.chat.send_say", :spec => spec)
-    message.add_parameter("wired.chat.id", 1)
-    message.add_parameter("wired.chat.say", content)
+	# Create a "wired.chat.say" to post in the public chat	
+	message = Wired::Message.new(:name => "wired.chat.send_say", :spec => spec)
+	message.add_parameter("wired.chat.id", 1)
+	message.add_parameter("wired.chat.say", content)
 	
 	# Send the message to the server
-	client.send_message(message)
+	client.send_message message
 	
 	# Wait for the response from the server
 	response = client.receive_message
 
-Have a look to `bin/rwire` code, rspec test cases and the source code for more examples.
+	puts response
+
+Have a look to `bin/rwire` code, rspec test cases and the source code for more examples and use cases.
 
 ## RWire example
 
-	bin/rwire connect example.org:4875 -l admin -p ********
+Connect to a Wired 2.0 server:
+
+	bin/rwire connect example.org -l admin -p ********
+
+Show general help:
+
+	rwire help
+
+Show connect command help:
+
+	rwire help connect
+
+## Generate documentation
+
+	gem install yard # install if needed
+	
+	yard
+
+Then open to `doc/index.html` to read the documentation (incompleted).
 
 ## Contribute
 

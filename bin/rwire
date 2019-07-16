@@ -74,6 +74,10 @@ class Window
       elsif string.start_with? "/icon"
         @client.icon = reststring
         @client.set_icon
+
+      elsif string.start_with? "/exit" or string.start_with? "/disconnect" 
+        @client.disconnect
+        exit 1
         
   		end
   	else
@@ -165,22 +169,22 @@ class RWire < Thor
 		url = Wired::Url.new "wired://#{login}:#{password}@#{hostname}:#{port}"
 
 		# Create a Client object against the specification
-		client = Wired::Client.new(spec, options)
+		@client = Wired::Client.new(spec, options)
 
 		# Handle interupt properly
 		#Kernel.trap("INT") { client.disconnect }
 
 		# create the window
-		window = Window.new(client)
+		window = Window.new(@client)
 
 		# Connect the client to the url
-		exit 0 unless client.connect url, window		
+		exit 0 unless @client.connect url, window		
 
     begin
       window.start
     rescue Interrupt => e
-      client.disconnect
-      warn "\nYou have been disconnected from #{client.server.name}"
+      @client.disconnect
+      warn "\nYou have been disconnected from #{@client.server.name}"
       exit 1
     end
 

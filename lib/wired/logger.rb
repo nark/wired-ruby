@@ -1,7 +1,7 @@
 module Wired 
-	require 'logging'
+  require 'logging'
 
-	# @return [Logging] The logger used internally by the library
-	Log 			= Logging.logger['wired']
-	Log.level 		= :debug
+  # @return [Logging] The logger used internally by the library
+  Log       = Logging.logger['wired']
+  Log.level = :debug
 end

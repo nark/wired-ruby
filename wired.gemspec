@@ -1,6 +1,8 @@
+require_relative 'lib/wired/version'
+
 Gem::Specification.new do |s|
   s.name        = 'wired'
-  s.version     = '0.0.2'
+  s.version     = Wired::VERSION
   s.date        = '2013-05-27'
   s.summary     = "Wired 2.0 implementation in Ruby"
   s.description = "This wired gem provides a Wired 2.0 implementation in Ruby"
@@ -9,6 +11,7 @@ Gem::Specification.new do |s|
   s.files 		  = Dir["{lib}/**/*", "[A-Z]*"]
   s.homepage    = 'http://wired.read-write.fr'
   s.license 	  = 'BSD-3-Clause'
+  s.executables << 'rwire'
 
   s.required_ruby_version = '>= 2.0.0'
 
@@ -21,4 +24,6 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'zlib', '~> 1.0.0'
   s.add_development_dependency 'bindata', '~> 2.4.4'
   s.add_development_dependency 'pr-zlib', '~> 1.0.6'
+  s.add_development_dependency 'curses'
+  s.add_development_dependency 'thor'
 end
