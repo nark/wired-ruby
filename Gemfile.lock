@@ -16,7 +16,7 @@ GEM
       multi_json (>= 1.8.4)
     mini_portile2 (2.4.0)
     multi_json (1.13.1)
-    nokogiri (1.10.3)
+    nokogiri (1.10.8)
       mini_portile2 (~> 2.4.0)
     openssl (2.1.2)
     pr-zlib (1.0.6)
